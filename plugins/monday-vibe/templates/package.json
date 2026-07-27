@@ -9,9 +9,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@vibe/core": "^4.0.0",
-    "@vibe/icons": "^1.0.0",
-    "monday-sdk-js": "^0.5.8",
+    "@vibe/core": "latest",
+    "@vibe/icons": "latest",
+    "monday-sdk-js": "latest",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

@@ -72,10 +72,18 @@ debe estar en 1 en Vercel (si está, la app muestra datos de ejemplo).
 
 ## Paso 5 — Desplegar y conectar el auto-deploy
 ```
+vercel git connect
 vercel --prod
 ```
-Después, en el dashboard de Vercel, confirmá que el proyecto quedó conectado al repo de GitHub: a
-partir de ahí **cada `git push` despliega solo**.
+`vercel git connect` vincula el proyecto al repo de GitHub: a partir de ahí **cada `git push`
+despliega solo**. Si el comando falla, se puede conectar desde el dashboard (Project → Settings →
+Git).
+
+### 5b. Protegé la URL (staging con datos reales del cliente)
+El proxy `/api/monday` queda accesible en internet. Recomendá al usuario UNA de estas:
+- **Deployment Protection** en Vercel (Settings → Deployment Protection) — la más simple.
+- O setear `APP_PROXY_KEY` en Vercel (el template del proxy ya la soporta vía header `x-app-key`).
+Y siempre: URL compartida solo por canal privado con el cliente.
 
 ## Paso 6 — Probar de verdad
 Abrí la URL que devolvió Vercel y verificá:

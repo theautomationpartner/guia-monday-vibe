@@ -17,7 +17,7 @@ En Claude Code, pegá estos dos comandos:
 
 ```
 /plugin marketplace add theautomationpartner/guia-monday-vibe
-/plugin install monday-vibe
+/plugin install monday-vibe@guia-monday-vibe
 ```
 
 Si te pide recargar, corré `/reload-plugins`. Listo, ya lo tenés para siempre.

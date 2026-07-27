@@ -84,6 +84,23 @@ Te lo pide, lo pegás, y va **encriptado** a Vercel. No queda en el repo ni en u
 
 ---
 
+## ⚠️ El proxy es público: protegé la URL de Vercel
+
+El token nunca se filtra, pero hay un riesgo distinto: **`/api/monday` queda accesible en internet**.
+Cualquiera que descubra la URL del deploy podría usar el proxy como "relay" para consultar el monday
+del cliente (con los permisos del token). Mitigaciones, de más simple a más fuerte:
+
+1. **Deployment Protection de Vercel** (recomendada): en el proyecto → *Settings → Deployment
+   Protection*. Con "Vercel Authentication" el sitio pide login antes de mostrar nada. Para que el
+   cliente pruebe, le compartís acceso o usás un link de bypass.
+2. **Guardia con clave** (ya soportada por el template `api-monday.js`): seteá `APP_PROXY_KEY` en
+   Vercel y hacé que el frontend mande el header `x-app-key`. No es un secreto fuerte (viaja en el
+   bundle), pero corta scrapers y bots.
+3. **Siempre**: token de **menor privilegio** + **rotarlo al terminar** el staging (ver abajo).
+
+Regla práctica: staging con datos reales de un cliente = URL **no pública**. No la publiques en
+ningún lado; pasásela al cliente por un canal privado.
+
 ## Menor privilegio y rotación
 
 - **Menor privilegio:** si la app **solo lee**, usá un token de un usuario con permisos de lectura.

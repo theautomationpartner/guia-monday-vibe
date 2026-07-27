@@ -1,10 +1,15 @@
 // src/App.jsx — punto de arranque de la app.
 // Reemplazá este contenido por tus pantallas reales, pero mantené:
-//   - los componentes de @vibe/core (no otras librerías de UI)
+//   - los componentes de @vibe/core para la UI (no otras librerías)
 //   - el acceso a monday SIEMPRE por src/lib/monday.js (nunca fetch directo)
+//
+// NOTA sobre la API de @vibe/core: los nombres exactos de props/componentes pueden variar
+// entre versiones. Antes de usar un componente, verificá su API real (el MCP opcional
+// @vibe/mcp la da exacta, o la doc en vibe.monday.com). Este arranque usa a propósito
+// solo lo mínimo para no depender de props que puedan cambiar.
 
 import { useEffect, useState } from "react";
-import { Box, Flex, Heading, Text, Loader } from "@vibe/core";
+import { Button } from "@vibe/core";
 import mondayLib from "./lib/monday";
 
 export default function App() {
@@ -19,28 +24,20 @@ export default function App() {
   }, []);
 
   if (error) {
-    return (
-      <Box padding={Box.paddings.LARGE}>
-        <Text color={Text.colors.NEGATIVE}>Error: {error}</Text>
-      </Box>
-    );
+    return <div style={{ padding: 24 }}>Error: {error}</div>;
   }
 
   if (!context) {
-    return (
-      <Flex justify={Flex.justify.CENTER} style={{ padding: 48 }}>
-        <Loader size={Loader.sizes.MEDIUM} />
-      </Flex>
-    );
+    return <div style={{ padding: 24 }}>Cargando…</div>;
   }
 
   return (
-    <Box padding={Box.paddings.LARGE}>
-      <Heading type={Heading.types.H1}>APP_NAME</Heading>
-      <Text>
-        Conectado. Board actual: {String(context.boardId ?? "—")}
-        {mondayLib.IS_MOCK ? " (modo mock)" : ""}
-      </Text>
-    </Box>
+    <div style={{ padding: 24 }}>
+      <h1>APP_NAME</h1>
+      <p>
+        Conectado{mondayLib.IS_MOCK ? " (modo mock)" : ""}. Tema: {String(context.theme ?? "—")}
+      </p>
+      <Button onClick={() => console.log("context:", context)}>Probar Vibe</Button>
+    </div>
   );
 }

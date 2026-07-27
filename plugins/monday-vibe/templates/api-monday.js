@@ -9,9 +9,24 @@
 //   - Local:  MONDAY_TOKEN=... en .env.local  (gitignoreado)
 //   - Vercel: Project Settings → Environment Variables → MONDAY_TOKEN
 
+// ⚠️ OJO: este endpoint es PÚBLICO en internet. Cualquiera que descubra la URL de Vercel
+// podría usarlo como relay hacia el monday del cliente. Mitigaciones (ver SEGURIDAD-TOKEN.md):
+//   1. Activá "Deployment Protection" en Vercel (con Vercel Authentication el preview queda
+//      detrás de un login) — la opción más simple.
+//   2. O seteá APP_PROXY_KEY en Vercel y en el frontend mandá el header x-app-key con ese valor
+//      (VITE_APP_PROXY_KEY). No es un secreto fuerte (viaja en el bundle) pero frena scrapers
+//      y bots casuales.
+//   3. Siempre: token de MENOR privilegio posible y rotarlo al terminar el staging.
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  // Guardia opcional: si APP_PROXY_KEY está seteada, exigirla en el header x-app-key.
+  const requiredKey = process.env.APP_PROXY_KEY;
+  if (requiredKey && req.headers["x-app-key"] !== requiredKey) {
+    return res.status(401).json({ error: "No autorizado" });
   }
 
   const token = process.env.MONDAY_TOKEN;

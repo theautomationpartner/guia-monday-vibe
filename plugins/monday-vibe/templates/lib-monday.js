@@ -10,6 +10,15 @@ import mondaySdk from "monday-sdk-js";
 
 const monday = mondaySdk();
 
+// ---- IDs REALES de los boards del cliente (completar en /iniciar) ----
+// ⚠️ REGLA: para las queries usá SIEMPRE estos IDs, NUNCA context.boardId.
+// Fuera de monday (Vercel/local) el context es un mock con un boardId falso:
+// si consultás con ese, la query va a un board inexistente y la app "parece rota".
+// context solo sirve DENTRO de monday (tema, viewMode, itemId en item views).
+export const BOARDS = {
+  // ejemplo: clientes: "1234567890",
+};
+
 const IS_MOCK = import.meta.env?.VITE_MONDAY_MOCK === "1";
 
 // Dentro de monday, la app corre embebida en un iframe (self !== top).

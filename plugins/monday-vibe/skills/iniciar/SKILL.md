@@ -51,9 +51,14 @@ Además, en el `CLAUDE.md` del proyecto agregá al final una sección **"## Dato
 - Nombre, tipo de app (variant) e **idioma de la UI** elegidos.
 - La tabla de boards/columnas con IDs reales (o el `TODO` si aún no los tiene).
 
-## 4. Instalá dependencias
-Corré `npm install` en la carpeta del proyecto. Si falla, mostrá el error y sugerí el arreglo
-(normalmente: Node desactualizado o la execution policy de Windows).
+## 4. Instalá dependencias y VERIFICÁ que arranca
+1. Corré `npm install` en la carpeta del proyecto. Si falla, mostrá el error y sugerí el arreglo
+   (normalmente: Node desactualizado o la execution policy de Windows).
+2. **Verificá el arranque**: corré `npm run dev` y confirmá que compila sin errores.
+   - Si falla el import `@vibe/core/tokens` o algún componente de `@vibe/core`: la API de Vibe pudo
+     haber cambiado de versión. Verificá los nombres reales (con el MCP opcional `@vibe/mcp` o la
+     doc en vibe.monday.com) y ajustá `main.jsx`/`App.jsx`. **No dejes el proyecto sin verificar.**
+3. Después completá `BOARDS` en `src/lib/monday.js` con los board IDs reales del paso 1.
 
 ## 5. Cerrá contando los próximos pasos (breve y claro)
 
