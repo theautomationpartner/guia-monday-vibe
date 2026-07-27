@@ -282,4 +282,41 @@ Cada fórmula y cada condición del prompt tiene que salir de **leer la función
 escribir de memoria una regla "razonable" que no es la que está implementada (ej: asumir que
 Monotributo factura letra B cuando el código dice A). Un error acá **factura mal en producción**.
 
+### Paso 4 — PRUEBA CIEGA (obligatoria, es la única que sirve de verdad)
+
+⚠️ **Los pasos 1-3 NO alcanzan.** Medido: la checklist encontró 12 huecos en un export real; la
+prueba ciega encontró **59** en el mismo material. Quien leyó el código **no puede** auditar su
+propio prompt: da por obvio todo lo que ya sabe.
+
+**Lanzá un subagente que SOLO pueda leer los archivos de prompt** (prohibido abrir el código
+fuente) y pedile que actúe como si fuera vibe. El prompt para ese agente:
+
+```
+Sos monday vibe. Te van a pegar estos prompts y tenés que construir la app.
+SOLO podés leer estos archivos: <lista de los .txt>. Está PROHIBIDO leer el código
+fuente de la app (si lo leés, la prueba no sirve).
+
+Decime, siendo duro y exhaustivo:
+1. BLOQUEANTES: qué NO podrías implementar por falta de información (citá la línea).
+2. AMBIGÜEDADES: dónde tendrías que elegir entre 2+ interpretaciones razonables, y
+   qué elegirías.
+3. CONTRADICCIONES entre los archivos o dentro de uno.
+4. SUPUESTOS que tendrías que inventar (qué pasa al cargar, listas vacías, navegar
+   para atrás, errores, si los datos persisten).
+5. VEREDICTO: ¿podrías construir algo equivalente al original? ¿Cuántas rondas de
+   corrección haría falta?
+Priorizá lo que causaría COMPORTAMIENTO DE NEGOCIO EQUIVOCADO (números mal, registros
+mal escritos) por sobre lo cosmético.
+```
+
+**Criterio de aceptación:** el export está listo cuando la prueba ciega devuelve **cero
+bloqueantes** y **ninguna ambigüedad que cambie números o registros**. Las ambigüedades cosméticas
+se pueden aceptar.
+
+**Repetí:** corregís el prompt con lo que salió → volvés a correr la prueba ciega (con un agente
+nuevo) → hasta que quede limpio. Suelen hacer falta 2 o 3 vueltas.
+
+> Cada bloqueante que caza la prueba ciega son ~1-2 builds de vibe que te ahorrás.
+> Es la parte más barata del proceso y la que más créditos salva.
+
 > Si el prompt te lleva más tiempo de verificar que de escribir, vas bien.
