@@ -84,6 +84,17 @@ Abrí la URL que devolvió Vercel y verificá:
 - [ ] Los flujos principales funcionan (crear/editar/filtrar lo que corresponda).
 - [ ] Estados vacío / error se ven bien.
 
+### 6b. Probar el TAMAÑO real (no alcanza con pantalla completa)
+⚠️ La app va a vivir **dentro de un iframe de monday**, con mucho menos espacio que una ventana
+completa. Probar solo a pantalla completa da una falsa sensación de que está bien.
+
+Abrí **DevTools → modo responsive** y verificá en anchos chicos (orientativo: ~400px como un item
+view, ~800px como un widget, y un ancho grande):
+- [ ] **No aparece scroll horizontal de página** (las tablas anchas scrollean dentro de su caja).
+- [ ] Nada se corta ni se superpone; los textos no se desbordan.
+- [ ] Las grillas colapsan bien (de 3-4 columnas a 1 en angosto).
+- [ ] Se ve bien en **tema claro y oscuro** (monday tiene light / dark / black).
+
 ## Paso 7 — Entregar al cliente
 Pasale la URL y pedile que la use. **Recién con su OK** se pasa a monday vibe
 (`/monday-vibe:exportar`). Todo lo que se descubra acá es gratis; descubrirlo dentro de vibe cuesta

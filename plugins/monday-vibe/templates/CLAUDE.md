@@ -40,6 +40,53 @@ OK usar una librería de gráficos (ej. Recharts). Íconos: preferí `@vibe/icon
 solo si falta alguno. Regla: Vibe para la UI estándar (botones, inputs, tablas, layout); librería de
 charts SOLO para los gráficos. No metas Tailwind para replicar lo que Vibe ya resuelve.
 
+## Medidas, embedding y tema (la app vive DENTRO de monday)
+
+La app no corre en una pestaña propia: corre **embebida en un iframe** adentro de monday, con el
+espacio que le deja la interfaz. Diseñar como si fuera una web full-screen es el error clásico.
+
+### Diseñá fluido, nunca a medida fija
+- ❌ Nada de anchos/altos fijos en px para layout (`width: 1200px`), ni posiciones absolutas para
+  estructurar la pantalla.
+- ✅ Usá `%`, `fr`, `minmax()`, flex/grid, `max-width`. Que todo se estire y se encoja.
+- ✅ Tablas y contenido ancho: **scroll horizontal propio** (`overflow-x: auto`) en su contenedor.
+  Nunca dejes que la página entera scrollee de costado.
+- ✅ Colapsá columnas en pantallas angostas (ej. una grilla de 3-4 columnas que pase a 1).
+
+### El espacio disponible depende del tipo de app
+| Variant | Espacio típico | Cuidados |
+|---|---|---|
+| `board_view` | Ancho del área del board, alto acotado | Puede estar en modo `split` (mitad de ancho) o `mobile` |
+| `item_view` | **Panel angosto** dentro del ítem | Es el más apretado: diseñá de una sola columna |
+| `dashboard_widget` | **Chico y redimensionable** por el usuario | Tiene que verse bien en tamaño mini y en `fullscreen` |
+| `object` (standalone) | Casi toda la pantalla | El más holgado, pero igual embebido |
+
+`monday.get("context")` te dice dónde estás: `instanceType`, y `viewMode`
+(`fullscreen` / `split` / `mobile` para board views; `widget` / `fullscreen` para widgets).
+Si la app tiene que comportarse distinto según el espacio, leelo de ahí — no adivines por el ancho.
+
+### Tema: light / dark / black (¡son 3!)
+- `context.theme` puede ser **`light`, `dark` o `black`**.
+- ✅ Usá los **tokens de Vibe** (`import "@vibe/core/tokens"`) y los componentes de `@vibe/core`:
+  se adaptan al tema solos.
+- ❌ **No hardcodees hex** (`#ffffff`, `#323338`) para fondos y textos: en dark queda ilegible.
+  Si necesitás un color de marca puntual, que sea la excepción, no la regla.
+
+### Densidad
+monday es una UI **densa**. Evitá paddings gigantes y tipografías enormes: la app tiene que sentirse
+parte de monday, no una landing page.
+
+### Cómo testear el tamaño de verdad (paso obligatorio)
+Probar en Vercel a pantalla completa **no alcanza** — te da una falsa sensación de que está bien.
+Antes de dar por buena una pantalla:
+1. Abrí las **DevTools → modo responsive** y probá la app en anchos chicos
+   (orientativo: ~400px para simular un item view, ~800px para un widget, y un ancho grande).
+2. Verificá: que no aparezca **scroll horizontal de página**, que nada se corte, que los textos no se
+   desborden y que las tablas scrolleen dentro de su caja.
+3. Probá **light y dark** (cambiá el tema del sistema o forzalo) si la app va a usarse en ambos.
+4. Cuando esté publicada en monday, **miralá en el lugar real** (el board/ítem/dashboard) antes de
+   exportar a vibe.
+
 ## Regla de oro: "código describible"
 El repo es real (vive en GitHub y se despliega a Vercel), pero **lo que recibe monday vibe es un
 prompt**, no el repo. Todo tiene que poder describirse. Entonces:
@@ -104,6 +151,8 @@ Cuando la data vive en monday, documentá el modelo como **boards + columnas** (
 
 **Validación:**
 - [ ] Desplegada en Vercel **con datos reales** (vía proxy) y probada end-to-end.
+- [ ] Probada en **anchos chicos** (DevTools responsive): sin scroll horizontal de página, nada cortado.
+- [ ] Se ve bien en **tema claro y oscuro**.
 - [ ] **El cliente la usó y dio el OK.**
 - [ ] Tengo **screenshots** de cada pantalla funcionando (para adjuntar a vibe).
 

@@ -78,12 +78,20 @@ Conectá estos boards como fuente de datos de la app.
 > Sin esto, vibe no encuentra los boards, cae a "datos por defecto" y **enmascara el problema**:
 > parece que anda y no. Es el error que dejó una app rota tras ~800 créditos.
 
-**Prompt 1 — Scaffold, con las reglas de API embebidas:**
+**Prompt 1 — Scaffold, con las reglas de API y de layout embebidas:**
 ```
 Crear una app de monday tipo <VARIANT>.
 Stack: React + Vibe (@vibe/core) + monday-sdk-js.
 Acceso a datos SIEMPRE con monday.api() del SDK — NO fetch directo, NO BoardSDK.executeGraphQL().
 Toda la UI en <idioma>.
+
+Layout: la app corre EMBEBIDA en un iframe de monday, con espacio acotado.
+- Diseño fluido (%, fr, minmax, flex/grid). NADA de anchos fijos en px.
+- Sin scroll horizontal de página: las tablas anchas scrollean dentro de su contenedor.
+- Las grillas colapsan a una columna en anchos chicos.
+- Usar los tokens de Vibe para colores: debe verse bien en tema claro Y oscuro. No hardcodear hex.
+- Densidad tipo monday (compacta), no una landing page.
+
 Propósito: <1-2 frases>.
 Pantallas: <lista de nombres>.
 ```

@@ -37,12 +37,22 @@ exactamente cómo arreglarlo**. No dejes al usuario adivinando.
   → ⚠️ está fuera del stack vibe-compatible; sugerí `/monday-vibe:adaptar`.
 - ¿Está `@vibe/core` (no el legacy `monday-ui-react-core`)?
 
-## D. Datos
+## D. Layout y tema (la app va embebida en monday)
+Revisá el CSS/JSX buscando problemas de tamaño:
+- ⚠️ **Anchos o altos fijos en px** para el layout (`width: 1200px`, `height: 800px`) → tiene que ser fluido.
+- ⚠️ **Colores hardcodeados** (`#fff`, `#323338`) en fondos/textos → se rompe en tema oscuro.
+  Deberían salir de los tokens de Vibe.
+- ⚠️ **Tablas anchas sin `overflow-x: auto`** en su contenedor → generan scroll horizontal de página.
+- ⚠️ Grillas de varias columnas **sin colapso** en anchos chicos.
+- Recordale al usuario probar en **DevTools modo responsive** (~400px / ~800px / ancho grande) y en
+  **tema claro y oscuro** antes de dar la app por buena.
+
+## E. Datos
 - ¿El `CLAUDE.md` tiene la tabla de boards/columnas con **IDs reales**? Si hay `TODO` o IDs de ejemplo
   → ⚠️ conseguilos antes de exportar (ver `${CLAUDE_PLUGIN_ROOT}/docs/REQUISITOS.md`).
 - ¿La app usa **5 boards o menos**? (límite de monday vibe).
 
-## E. Cuentas (preguntale, no lo podés verificar solo)
+## F. Cuentas (preguntale, no lo podés verificar solo)
 - GitHub y Vercel: ¿tiene cuenta?
 - **monday destino**: ¿es cuenta **paga**, con **IA habilitada** por un admin, y con **créditos**?
   (Las cuentas free no pueden crear apps vibe; las de trial no pueden publicar.)

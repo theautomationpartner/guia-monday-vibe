@@ -18,7 +18,16 @@ const INSIDE_MONDAY =
   typeof window !== "undefined" && window.self !== window.top;
 
 // ---- Datos de ejemplo para el mock (editá según tu app) ----
-const MOCK_CONTEXT = { boardId: 123456789, user: { id: 1, name: "Demo" }, theme: "light" };
+// Incluye theme y viewMode porque la app corre EMBEBIDA en monday y su tamaño/tema cambian.
+// theme: "light" | "dark" | "black".
+// viewMode: board view → "fullscreen" | "split" | "mobile"; widget → "widget" | "fullscreen".
+const MOCK_CONTEXT = {
+  boardId: 1234567890,
+  user: { id: 1, name: "Demo" },
+  theme: "light",
+  viewMode: "fullscreen",
+  instanceType: "board_view",
+};
 const MOCK_ITEMS = [{ id: "1", name: "Ítem demo A" }, { id: "2", name: "Ítem demo B" }];
 
 function mockApi(query) {
@@ -50,5 +59,12 @@ export async function api(query, variables = {}) {
   return res.json();
 }
 
+// Escuchar cambios de contexto: el usuario cambia el tema (light/dark/black),
+// redimensiona el widget o cambia de ítem. Usalo si la UI depende del tema o del viewMode.
+export function onContextChange(cb) {
+  if (IS_MOCK || !INSIDE_MONDAY) return () => {};
+  return monday.listen("context", (res) => cb(res.data));
+}
+
 export { IS_MOCK, INSIDE_MONDAY };
-export default { getContext, api, IS_MOCK, INSIDE_MONDAY };
+export default { getContext, api, onContextChange, IS_MOCK, INSIDE_MONDAY };
