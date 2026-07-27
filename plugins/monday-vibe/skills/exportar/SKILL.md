@@ -75,22 +75,37 @@ Esta skill funciona igual sobre una app hecha "a su manera" (sin `/monday-vibe:i
 
 ## 2. Estructurar en capas (datos → esqueleto → detalle → pulido)
 
-### ⚖️ Cuántos prompts: ni uno gigante, ni muchos fragmentos
-Cada mensaje a vibe cuesta (**~8 créditos de base** + lo del modelo), así que **menos prompts es más
-barato** — pero solo si cada uno es **completo y preciso**. La regla real:
+### ⚖️ Cuántos prompts: POCOS y MUY DETALLADOS
 
-| Enfoque | Qué pasa |
-|---|---|
-| **Un solo mega-prompt con todo** | Vibe tiene que razonar demasiado, se saltea cosas → **rework** (lo más caro). Si sale mal, revertís y perdés todo. |
-| **Muchos prompts chiquitos** | Pagás la base una y otra vez, y vibe pierde contexto entre mensajes. |
-| ✅ **Un prompt COMPLETO por fase coherente** | Lo que funcionó en el caso más barato (~8 prompts para una app compleja, builds de 17-88 créditos). |
+**Dato duro, medido sobre casos reales que salieron baratos:**
 
-**Criterio práctico:** una fase = algo que se puede construir y **verificar de una sola vez**
-(el modelo de datos, el esqueleto, una pantalla entera, el pulido). Que cada prompt sea
-auto-contenido y sin ambigüedad; no lo partas por partirlo.
+| Prompt | Largo | Costó |
+|---|---|---|
+| Etoile #4 | **907 líneas** | 88 créditos |
+| Etoile #2 | **849 líneas** | 84 créditos |
+| Dashboard #4 | **66 líneas** | **79 créditos** |
+| Etoile #6 | **24 líneas** | 30 créditos |
 
-Para una app típica esto da **4 a 8 prompts**. Si te salen 20, estás fragmentando de más;
-si te sale 1 para 10 pantallas, estás pidiendo demasiado junto.
+👉 **El largo del prompt NO mueve el costo.** Un prompt de 900 líneas cuesta casi lo mismo que uno
+de 66. Lo que se paga es **cuánto trabaja vibe** (cuánto código genera y razona), no cuánto texto
+le mandás.
+
+**Regla que se desprende:**
+> **El detalle es gratis. Los builds son caros.**
+> Meté TODO el detalle posible en cada prompt y **minimizá la CANTIDAD de prompts.**
+
+**Criterio para partir:** un prompt = todo lo que vibe puede construir y vos podés **verificar de
+una sola vez**. Partí solo cuando:
+- la verificación se vuelve imposible de una (no sabrías qué falló), o
+- una parte necesita un modelo distinto (la lógica pesada en Opus, el resto en Flash).
+
+**Para una app típica: 3 a 5 prompts.** Estructura recomendada:
+1. **Datos + esqueleto** (boards, stack, layout, navegación) — Flash
+2. **Todas las pantallas** con su comportamiento completo — Sonnet
+3. **Motor de cálculo / lógica pesada** (si la hay, aislado) — Opus
+4. **Pulido** — Flash
+
+Si te salen 8+, estás fragmentando de más y pagando builds al pedo.
 
 **Prompt 0 — Prerequisito de datos (SIEMPRE primero):**
 ```
@@ -156,13 +171,53 @@ equivoca si le dejás lugar a inventar.
 ⚠️ **Opus es la trampa #1**: un dashboard en Opus cuesta 10–25× lo mismo en Flash. Anotá el modelo
 sugerido al lado de cada prompt.
 
-## 5. Entregar
-Producí **`vibe-prompts.md`** en la raíz del proyecto con:
-1. Una nota arriba: *"Pegar en orden. Esperar a que vibe termine cada uno antes del siguiente.
-   Verificar en la app real después de cada uno."*
-2. Cada prompt en **su propio bloque de código**, numerado, con **modelo sugerido** y **qué adjuntar**
-   (screenshot / CSV).
-3. Al final, un checklist de verificación.
+## 5. Entregar — UN ARCHIVO POR PROMPT (no un md con todo mezclado)
+
+⚠️ **Problema real a evitar:** si entregás un solo `.md` que mezcla prompts con explicaciones,
+tablas y checklists, alguien apurado **copia el archivo entero y lo pega en vibe** — incluyendo tus
+comentarios y las instrucciones para el humano. Vibe se confunde y se gastan créditos al pedo.
+
+**Solución: cada prompt es su propio archivo de texto plano.** Así "copiar todo el archivo" ES la
+acción correcta y no hay ambigüedad posible.
+
+Creá esta estructura en la raíz del proyecto:
+
+```
+vibe/
+├── LEEME.md              ← para el HUMANO: orden, modelos, capturas, verificación
+├── 1-datos-y-esqueleto.txt   ← para VIBE: copiar TODO y pegar
+├── 2-pantallas.txt           ← para VIBE
+├── 3-calculos.txt            ← para VIBE (si hay lógica pesada)
+└── 4-pulido.txt              ← para VIBE
+```
+
+**Reglas de los archivos `.txt`:**
+- Contienen **SOLO** el prompt. Nada de encabezados markdown, tablas de créditos, ni comentarios
+  tuyos. Si está en el archivo, va a vibe.
+- Empiezan con el header de instrucción dura (Sección 0b).
+- Se copian **completos** (Ctrl+A, Ctrl+C).
+
+**El `LEEME.md`** es lo único para el humano. Tiene que decir, por cada archivo:
+| Archivo | Modelo a elegir en vibe | Qué adjuntar |
+|---|---|---|
+| `1-datos-y-esqueleto.txt` | Gemini Flash | — |
+| `2-pantallas.txt` | Claude Sonnet | las capturas de cada pantalla |
+| ... | | |
+
+### Cómo indicar las capturas (sé específico o no sirve)
+No pongas "adjuntar captura.png" y listo. Para CADA imagen decí **qué tiene que mostrar**:
+
+```
+Capturas a sacar antes de empezar (de la app corriendo en Vercel):
+  1. pantalla-clientes.png  → el paso 1 con un cliente YA cargado, mostrando la ficha completa
+                              y la barra de crédito
+  2. pantalla-productos.png → el paso 2 con 2 o 3 productos ya agregados a la tabla y los totales
+                              visibles
+  3. pantalla-cobro.png     → el paso 3 con un movimiento de cobro cargado
+Sacalas con la ventana ANGOSTA (no maximizada), para que vibe copie una UI compacta.
+```
+
+Regla: el dev tiene que poder sacar cada captura **sin preguntarte nada**.
 
 **Camino alternativo (si hay conector de monday disponible):** se puede orquestar desde acá con
 `vibe_create` (con `variant`, `board_ids` y `model`) y `vibe_update`, poleando `vibe_get` hasta
