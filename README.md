@@ -16,13 +16,25 @@ pruebe → y recién al final la pasás a **monday vibe** con un prompt preparad
 En Claude Code, pegá estos dos comandos:
 
 ```
-/plugin marketplace add theautomationpartner/guia-monday-vibe
+/plugin marketplace add https://github.com/theautomationpartner/guia-monday-vibe.git
 /plugin install monday-vibe@guia-monday-vibe
 ```
 
 Si te pide recargar, corré `/reload-plugins`. Listo, ya lo tenés para siempre.
 
-> El repo es privado: necesitás acceso y estar logueado con GitHub.
+> ⚠️ **Usá la URL HTTPS completa** (como está arriba), no la forma corta
+> `theautomationpartner/guia-monday-vibe`: esa intenta clonar por **SSH** y falla con
+> *"SSH host key is not in your known_hosts file"* si nunca te conectaste por SSH a GitHub.
+
+**Requisitos:** el repo es privado, así que necesitás (a) acceso al repo en la organización y
+(b) credenciales de git para GitHub. Para verificar que las tenés:
+
+```
+git clone --depth 1 https://github.com/theautomationpartner/guia-monday-vibe.git /tmp/prueba
+```
+
+Si eso clona bien, la instalación va a funcionar. Si te pide usuario/contraseña o falla, configurá
+las credenciales primero con `gh auth login` (elegí **HTTPS** cuando pregunte el protocolo).
 
 ---
 
@@ -76,6 +88,15 @@ Otros documentos útiles:
 ```
 /plugin marketplace update guia-monday-vibe
 ```
+
+## Si algo falla al instalar
+
+| Error | Causa | Solución |
+|---|---|---|
+| *"SSH host key is not in your known_hosts file"* | Usaste la forma corta `owner/repo` → intenta SSH | Usá la **URL HTTPS completa** (`https://github.com/...git`) |
+| *"Could not read from remote repository"* | Sin acceso al repo o sin credenciales | Pedí acceso a la org y corré `gh auth login` (protocolo **HTTPS**) |
+| El plugin instala pero no aparecen los comandos | Falta recargar | `/reload-plugins`, o reiniciá Claude Code |
+| No encontrás los comandos | Llevan prefijo | Escribí `/monday-vibe:` y se despliegan los 6 |
 
 ---
 
