@@ -29,6 +29,9 @@ Decí tu recomendación en una línea y **confirmá con el usuario** antes de em
 | Íconos (lucide, react-icons) | `@vibe/icons` (dejá el otro solo si falta alguno) |
 | Gráficos (Recharts, Chart.js) | **Se pueden quedar** — Vibe no cubre charts |
 | Estado global exótico (Redux, Zustand) | `useState` / `useReducer` / Context |
+| **Chrome de monday replicado** (AppShell, sidebar, rail, árbol de tableros) | **Se elimina entero** — monday ya lo dibuja |
+| Componentes UI hechos a mano (Modal, Dropdown, Stepper, Avatar, ProgressBar) | Sus equivalentes de `@vibe/core` |
+| `VITE_*_TOKEN` leído con `import.meta.env` | `MONDAY_TOKEN` server-side + proxy |
 
 ## Cómo trabajar (incremental, sin romper)
 

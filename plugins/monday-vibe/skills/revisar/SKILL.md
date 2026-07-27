@@ -25,8 +25,11 @@ exactamente cómo arreglarlo**. No dejes al usuario adivinando.
 3. Buscá tokens filtrados en el código y en el historial: patrón `eyJ` (los tokens de monday son JWT).
    Si aparece uno commiteado: avisá que **hay que rotar el token en monday** (borrarlo del archivo no
    alcanza, queda en el historial).
-4. ¿Alguna variable de token tiene prefijo `VITE_`? → ❌ **grave**: se expone al navegador. Renombrala
-   a `MONDAY_TOKEN` (sin `VITE_`).
+4. ¿Alguna variable de token tiene prefijo `VITE_`? → ❌ **grave**. Buscá específicamente
+   `import.meta.env.VITE_*TOKEN*` en `src/`. Aunque esté pensado "solo para dev", **Vite inlinea ese
+   valor en el bundle al compilar**: si la variable existe en el entorno de build (o alguien la carga
+   por error en Vercel), el token queda dentro del JS público. Renombrala a `MONDAY_TOKEN` (sin
+   `VITE_`) y que el acceso vaya siempre por el proxy.
 5. ¿El token se usa SOLO dentro de `api/monday.js`? Si algún componente del frontend lo lee → ❌.
 
 ## C. Proyecto
@@ -38,6 +41,11 @@ exactamente cómo arreglarlo**. No dejes al usuario adivinando.
 - ¿Está `@vibe/core` (no el legacy `monday-ui-react-core`)?
 
 ## D. Layout y tema (la app va embebida en monday)
+- 🔴 **¿La app reconstruye el chrome de monday?** Buscá componentes tipo `AppShell`, `Sidebar`,
+  `Topbar`, `WorkspacePanel`, rails de iconos, árboles de tableros o headers de cuenta. Si están →
+  **sobran**: monday ya los dibuja alrededor del iframe. Es trabajo que se tira y hace que la app
+  quede diseñada para pantalla completa en vez del espacio real.
+
 Revisá el CSS/JSX buscando problemas de tamaño:
 - ⚠️ **Anchos o altos fijos en px** para el layout (`width: 1200px`, `height: 800px`) → tiene que ser fluido.
 - ⚠️ **Colores hardcodeados** (`#fff`, `#323338`) en fondos/textos → se rompe en tema oscuro.

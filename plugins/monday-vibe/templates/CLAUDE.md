@@ -45,6 +45,22 @@ charts SOLO para los gráficos. No metas Tailwind para replicar lo que Vibe ya r
 La app no corre en una pestaña propia: corre **embebida en un iframe** adentro de monday, con el
 espacio que le deja la interfaz. Diseñar como si fuera una web full-screen es el error clásico.
 
+### ❌ NUNCA reconstruyas la interfaz de monday
+El error más caro de todos: replicar el "chrome" de monday alrededor de tu app (header superior,
+rail de iconos lateral, panel de workspace con el árbol de tableros, breadcrumbs de la cuenta).
+**Todo eso ya existe** — monday lo dibuja alrededor de tu iframe.
+
+Construir tu app **es solo el contenido**, como si fuera el interior de un panel:
+- ❌ Header global de monday, buscador de la cuenta, avatar/perfil, menú de workspaces.
+- ❌ Rail de iconos lateral, árbol de carpetas/tableros, selector de cuenta.
+- ✅ Solo tu pantalla: tus filtros, tu tabla, tus formularios, tus acciones.
+
+Por qué importa (más allá del trabajo tirado): si maquetás ese marco, terminás **diseñando para
+pantalla completa** y la app queda mal dimensionada para el espacio real del iframe.
+
+> ¿Y si querés ver cómo va a quedar? Simulá el espacio con las DevTools (modo responsive al ancho
+> que corresponda), no construyendo un decorado de monday alrededor.
+
 ### Diseñá fluido, nunca a medida fija
 - ❌ Nada de anchos/altos fijos en px para layout (`width: 1200px`), ni posiciones absolutas para
   estructurar la pantalla.
