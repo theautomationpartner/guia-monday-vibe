@@ -244,6 +244,42 @@ lea del **board real**, no de datos por defecto. Si falta algo, corregí con un 
 explique qué construyó**. Es la forma más rápida de detectar que "dijo que sí" pero dejó algo
 hardcodeado o sin conectar — sin gastar un build para descubrirlo.
 
-## Antes de entregar
-Releé cada prompt preguntándote: *"¿alguien que nunca vio el código podría reconstruir esta pantalla
-exactamente con esto?"*. Si la respuesta es no, falta detalle.
+## Antes de entregar: AUTO-VERIFICACIÓN obligatoria
+
+Releer "a ver si está completo" **no alcanza** — el sesgo de quien leyó el código hace que todo
+parezca obvio. Hacé esto en su lugar:
+
+### Paso 1 — Leelo como si fueras vibe
+Releé cada prompt **fingiendo que nunca viste el código** y marcá cada frase donde tendrías que
+**adivinar** algo. Cada adivinanza es un build desperdiciado.
+
+### Paso 2 — Checklist de lo que SIEMPRE se olvida
+Estas categorías se escapan en el 90% de los exports. Verificá **una por una** contra el código:
+
+- [ ] **Índices y etiquetas EXACTOS de cada columna status** que se escribe (`{index: 2}` o
+      `{label: "..."}`). Sin esto vibe escribe cualquier cosa. Ojo con etiquetas con espacios dobles.
+- [ ] **Valores permitidos de cada dropdown** (ej: la alícuota solo acepta 0/2.5/5/10.5/21/27) y qué
+      hacer si el dato no es uno de ellos (¿engancharlo al más cercano? ¿rechazar?).
+- [ ] **Formato exacto de cada campo al escribir** (números sin guiones, fechas `yyyy-MM-dd`,
+      texto en minúscula, etc.).
+- [ ] **Reglas de agrupación/división**: si un documento se parte en varios (comprobantes, remitos),
+      ¿cuál es el criterio EXACTO y en qué orden quedan?
+- [ ] **Qué NO se escribe**: columnas fórmula, espejo, o campos que llena una automatización.
+- [ ] **Nombres de los ítems y subítems**: ¿se renombran después de crearlos? ¿con qué patrón?
+- [ ] **Idempotencia**: qué pasa si el usuario reintenta. ¿Se duplica? ¿Qué guarda para no repetir?
+- [ ] **Cómo busca**: ¿match exacto, "contiene", o difuso? ¿cuántos resultados trae? ¿filtra en el
+      cliente o en la query?
+- [ ] **Qué hace que un registro sea "elegible"** (vigente, pendiente, activo): la condición completa,
+      no "los vigentes".
+- [ ] **Condicionales de negocio**: reglas que cambian según el tipo de cliente/operación
+      (ej: "el vencimiento es +30 días SOLO si es cuenta corriente").
+- [ ] **Datos que están hardcodeados** en el código y no vienen de ningún board (listas fijas,
+      valores por defecto). Vibe va a buscar un board que no existe.
+- [ ] **Umbrales numéricos** de los semáforos y validaciones (50%, 90%, mínimos, máximos).
+
+### Paso 3 — Verificá las reglas contra el código, no contra tu memoria
+Cada fórmula y cada condición del prompt tiene que salir de **leer la función real**. Es muy fácil
+escribir de memoria una regla "razonable" que no es la que está implementada (ej: asumir que
+Monotributo factura letra B cuando el código dice A). Un error acá **factura mal en producción**.
+
+> Si el prompt te lleva más tiempo de verificar que de escribir, vas bien.
