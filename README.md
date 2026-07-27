@@ -61,7 +61,11 @@ Cada uno tiene que devolverte un número de versión:
 - **node** → tiene que ser **v18** o más alto. Si dice "no se reconoce", instalá Node LTS desde
   [nodejs.org](https://nodejs.org).
 - **git** → si falta, instalalo desde [git-scm.com](https://git-scm.com/download/win).
-- **gh** → si falta, corré: `winget install GitHub.cli` y después **cerrá y abrí la terminal**.
+- **gh** → si falta, corré: `winget install GitHub.cli`.
+
+> ⚠️ **Cada vez que instales una de estas herramientas, cerrá VS Code por completo y volvé a
+> abrirlo.** Si no, la terminal sigue sin "ver" lo que acabás de instalar y te va a decir que no
+> existe, aunque esté instalado. (Cerrar del todo, no "Reload Window".)
 
 **Solo en Windows**, si alguno falla diciendo *"la ejecución de scripts está deshabilitada"*, pegá
 esto una vez y respondé `S`:
@@ -188,6 +192,12 @@ https://github.com/theautomationpartner/guia-monday-vibe.git
 
 **3.3** Arriba aparece una barra con un botón **"Restart"** → clickealo.
 
+**3.4** ⚠️ **Cerrá VS Code por completo y volvé a abrirlo.**
+
+Sí, aunque le hayas dado a "Restart". El botón no siempre alcanza para que el plugin quede activo:
+hay que **cerrar la ventana entera de VS Code** (no "Reload Window") y abrirla de nuevo. Si los
+comandos del Paso 4 no te aparecen, casi siempre es por esto.
+
 ---
 
 ### Paso 4 — Verificar que funcionó · 💬 CHAT
@@ -278,7 +288,8 @@ Estos dos son los que le pasan a **casi todos** la primera vez:
 | *"Cannot prompt because user interactivity has been disabled"* / *"unable to get password"* | git necesita credenciales pero no puede preguntarte | Corré **`gh auth setup-git`** y reiniciá VS Code |
 | *"Could not read from remote repository"* | Sin acceso al repo | Pedí que te agreguen a la organización |
 | No aparece `/plugin` al escribir `/` | En la extensión de VS Code no existe ese comando | Escribí `/plu` y elegí **"Manage plugins"** |
-| Instalado pero no aparecen los comandos | Falta reiniciar | Botón **Restart**, o cerrá y abrí VS Code completo |
+| Instalado pero no aparecen los comandos | El botón "Restart" no siempre alcanza | **Cerrá VS Code por completo y abrilo de nuevo** (no "Reload Window") |
+| Instalaste node/git/gh pero "no se reconoce el comando" | La terminal no ve lo nuevo hasta reiniciar | **Cerrá VS Code por completo y abrilo de nuevo** |
 | No encontrás los comandos | Llevan prefijo | Escribí `/monday-vibe:` y se despliegan los 6 |
 
 ---
