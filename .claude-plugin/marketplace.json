@@ -1,0 +1,17 @@
+{
+  "name": "guia-monday-vibe",
+  "owner": {
+    "name": "The Automation Partner"
+  },
+  "plugins": [
+    {
+      "name": "monday-vibe",
+      "source": "./plugins/monday-vibe",
+      "description": "Guía y herramientas para crear apps de monday: desarrollo local con Claude Code, deploy a Vercel y traspaso a monday vibe gastando el mínimo de créditos.",
+      "version": "0.1.0",
+      "author": {
+        "name": "The Automation Partner"
+      }
+    }
+  ]
+}

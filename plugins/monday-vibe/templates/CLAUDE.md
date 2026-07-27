@@ -1,0 +1,135 @@
+# CLAUDE.md — App monday "vibe-compatible"
+
+> Reglas de este proyecto (las puso `/monday-vibe:iniciar`). Objetivo: que TODO lo que construyamos
+> acá traduzca **1:1 a monday vibe** con el mínimo de iteraciones (= mínimo de créditos de IA).
+> Documentación completa: comandos `/monday-vibe:*` y los docs del plugin (REQUISITOS, SEGURIDAD-TOKEN, MODELOS).
+
+## Contexto del flujo
+Esta app se desarrolla **localmente** con Claude Code, se testea en **Vercel**, y recién al final se **reconstruye en monday vibe** con un prompt + adjuntos. Por eso cada decisión de código se toma pensando en "¿esto se puede describir y mostrar con lo que vibe acepta?".
+
+### Qué acepta monday vibe como input (doc oficial)
+- **Imágenes / referencia visual** (bajo "Theme"): PNG, JPEG, JPG, WEBP, **PDF y archivos de texto**. También podés dar una **URL** de referencia.
+- **Datos**: **CSV, XLSX, XLS** → vibe arma la estructura: **cada fila = un ítem, cada columna = un campo**.
+- **Prompt de texto** (podés pegar código como texto — funciona, aunque monday recomienda describir comportamiento).
+- ❌ NO sube archivos de código como tales.
+
+**Aprovechá los adjuntos (ahorran créditos):**
+- **Screenshots del local = contrato visual.** Capturá cada pantalla YA funcionando y adjuntala con "reproducí exacto esto" → vibe copia UX/UI/colores en vez de adivinar.
+- **Modelo de datos = CSV/XLSX.** En vez de describir boards/columnas en texto, subí una planilla de ejemplo → vibe crea la estructura.
+
+## Stack obligatorio (no desviarse)
+Usar EXACTAMENTE lo que monday vibe genera, para que la traducción sea directa:
+
+- **Frontend:** React 18 + Vite.
+- **UI:** componentes **Vibe** = **`@vibe/core`** (Vibe 4, el actual y mantenido). NO usar `monday-ui-react-core` (Vibe 2, legacy sin soporte). Botones, inputs, tablas, modales, layout: Vibe.
+  - Importá los design tokens en la raíz: `import "@vibe/core/tokens"` → te da la paleta monday (#0073ea, #f6f7fb, etc.) sin hardcodear hex.
+  - Íconos: **`@vibe/icons`** (nativo). Testing: **`@vibe/testkit`** (Playwright).
+- **Contexto y datos monday:** `monday-sdk-js` (`monday.get("context")`, `monday.api(...)` con GraphQL).
+- **Backend (si hace falta):** Express + `@mondaycom/apps-sdk`. Preferir usar **boards como base de datos** vía GraphQL antes que una DB externa.
+
+### Prohibido (rompe la traducción a vibe)
+- ❌ Otras librerías de UI: MUI, shadcn, Chakra, Ant, Bootstrap.
+- ❌ Tailwind o CSS "artesanal" pesado para replicar cosas que Vibe ya resuelve.
+- ❌ Frameworks full-stack que vibe no usa (Next.js con SSR, Remix, etc.). Vite + React "a secas".
+- ❌ Estado global exótico. `useState`/`useReducer`/Context alcanzan para el 95% de las apps monday.
+
+Si algo NO se puede hacer con Vibe, pará y avisá antes de meter una dependencia nueva.
+
+**Excepción — visualización de datos:** Vibe NO cubre gráficos. Para dashboards con charts está
+OK usar una librería de gráficos (ej. Recharts). Íconos: preferí `@vibe/icons`; Lucide/react-icons
+solo si falta alguno. Regla: Vibe para la UI estándar (botones, inputs, tablas, layout); librería de
+charts SOLO para los gráficos. No metas Tailwind para replicar lo que Vibe ya resuelve.
+
+## Regla de oro: "código describible"
+El repo es real (vive en GitHub y se despliega a Vercel), pero **lo que recibe monday vibe es un
+prompt**, no el repo. Todo tiene que poder describirse. Entonces:
+- Preferí lo **simple y estándar** sobre lo ingenioso. Si un componente es difícil de explicar en prosa, es difícil de reproducir en vibe.
+- Nombrá componentes y pantallas con nombres de negocio claros (ej: `PantallaEmisionFactura`, no `View2`).
+- Un componente = una responsabilidad clara y nombrable.
+- Evitá abstracciones prematuras (HOCs raros, hooks genéricos súper anidados).
+
+## Acceso a monday: 3 modos (mock / proxy-Vercel / nativo-monday)
+Envolvé TODO acceso a monday en un módulo único (`src/lib/monday.js`) con 3 caminos:
+1. **Mock** (dev rápido): si `VITE_MONDAY_MOCK=1`, devuelve datos de ejemplo. Sin red.
+2. **Proxy serverless** (Vercel, la app REAL que testea el cliente): fuera de monday, el frontend
+   le pega a `/api/monday` (una función serverless) que agrega el token y llama a la API real.
+   El **token vive SOLO en el server** (variable de entorno), nunca en el frontend ni en el repo.
+3. **Nativo** (dentro de monday / vibe): usa `monday.api()` del SDK con la **sesión** del usuario.
+   No necesita token estático.
+
+## Deploy a Vercel + seguridad del token (CRÍTICO)
+La app en Vercel es la **versión real** que el cliente usa/testea antes de aprobar el paso a vibe.
+- **Deploy automático:** repo en GitHub → conectar el proyecto en Vercel → cada push despliega solo.
+- **Token de monday = server-side ONLY:**
+  - 🔒 **NUNCA en el repo.** `.gitignore` incluye `.env.local` y `.env`.
+  - 💻 **Local:** `MONDAY_TOKEN` en `.env.local` (gitignoreado).
+  - ☁️ **Vercel:** `MONDAY_TOKEN` como Environment Variable en el dashboard del proyecto.
+  - 🚫 **Sin prefijo `VITE_`** (VITE_ se expone al browser). El token lo lee SOLO la función `/api/monday`.
+  - El frontend nunca ve el token: le pega al proxy, el proxy pone el `Authorization`.
+- **Los boards del cliente YA existen:** leé sus board/column IDs reales (no inventar, no crear con CSV).
+- **Ojo al exportar a vibe:** el proxy serverless es SOLO para Vercel. En vibe, la app usa `monday.api()`
+  nativo (sesión) — el prompt de vibe NO debe mencionar el proxy ni el token.
+
+## Tipo de app / variant (definir al inicio)
+monday vibe crea la app con un `variant` específico. Definilo antes de codear porque cambia
+el prompt final Y el parámetro `variant` de `vibe_create`. Valores reales de la API:
+- **`board_view`** — vista dentro de un board (1 board host).
+- **`item_view` / `vibe_item_view`** — panel dentro de un ítem.
+- **`vibe_dashboard_widget`** — widget en un dashboard (requiere `view_id` + `board_id`).
+- **`object`** — app standalone multi-board (solo frontend).
+- **`object_fullstack`** — app standalone con backend.
+- **`monday_campaigns`** — apps de campañas.
+
+Los boards existentes se conectan como fuente de datos vía `board_ids` (multi-board en
+`object`/`object_fullstack`; un board host en las vistas). Si no pasás boards, vibe crea uno.
+
+## Modelo de datos = columnas de board
+Cuando la data vive en monday, documentá el modelo como **boards + columnas** (nombre, tipo de columna monday: `status`, `text`, `numbers`, `date`, `person`, `dropdown`, etc.). Ese mapeo ES parte del prompt de vibe.
+
+## Checklist antes de exportar a vibe
+
+**Seguridad (bloqueante — revisar SIEMPRE):**
+- [ ] El token NO está en el repo (`git log`/`git grep` limpios; `.env.local` gitignoreado).
+- [ ] El token NO tiene prefijo `VITE_` (no llega al browser).
+
+**Datos:**
+- [ ] Uso los **board/column IDs REALES** del cliente (verificados, no inventados).
+- [ ] El modelo de datos está documentado como boards + columnas (nombre + tipo).
+
+**App:**
+- [ ] La UI usa Vibe (`@vibe/core`); solo se usó otra librería donde Vibe no tiene equivalente (charts).
+- [ ] `src/lib/monday.js` centraliza el acceso y cubre los 3 modos (mock / proxy / nativo).
+- [ ] Cada pantalla/componente tiene nombre de negocio claro.
+- [ ] Está definido el **tipo de app / variant** monday.
+
+**Validación:**
+- [ ] Desplegada en Vercel **con datos reales** (vía proxy) y probada end-to-end.
+- [ ] **El cliente la usó y dio el OK.**
+- [ ] Tengo **screenshots** de cada pantalla funcionando (para adjuntar a vibe).
+
+Cuando esto esté ✔, corré **`/monday-vibe:exportar`** para generar los prompts.
+
+## Gotchas reales de la API de monday (verificados en producción)
+
+Errores que ya costaron créditos/tiempo. Aplicarlos de entrada evita que Vibe (o vos) los redescubra:
+
+- **Acceso a datos:** dentro de una app monday/Vibe, SIEMPRE `monday.api(query)` de `monday-sdk-js`. NO `fetch` directo (no hay token en el browser) NI `BoardSDK.executeGraphQL()` (no existe — Vibe lo suele alucinar).
+- **Columnas checkbox (boolean):** se escriben con `change_column_value` + JSON `{"checked":"true"}`. `change_simple_column_value` las **rechaza** con error explícito.
+- **Columnas file:** subir = mutation `add_file_to_column` por **multipart/form-data** contra `/v2/file` (no `/v2`). Vaciar = `update_assets_on_item(files: [])`. `change_simple_column_value` no sirve para files.
+- **Columnas board_relation (conectadas):** `text` viene **siempre `null`**. Hay que pedir `... on BoardRelationValue { display_value }`. Escribir = `change_column_value` con `{"item_ids":[<id>]}`.
+- **Columnas formula encadenadas:** vía API muchas veces vienen **vacías** aunque sus dependencias tengan valor. No confiar en ellas; recalcular en código a partir de los datos crudos.
+- **Prerequisito de datos:** los boards/columnas que la app lee tienen que **existir y estar conectados ANTES**. Si Vibe no encuentra un board (ej. un tarifario), cae a datos por defecto y enmascara el problema — parece que anda y no.
+- **Colores/labels de status y opciones de dropdown:** leerlos en vivo de `settings_str` de la columna, no hardcodear (así un cambio en monday no requiere tocar código).
+
+## Cómo trabajar conmigo (Claude Code) en este repo
+- **Planificar features grandes:** subagente `monday-vibe:vibe-planner` (no ensucia el contexto principal).
+- **Planificar primero:** en apps medianas/complejas, `/monday-vibe:planear`.
+- **Conseguir los IDs reales (sin instalar nada):** el **board ID está en la URL** de monday
+  (`/boards/<ID>`), y los **column IDs** se copian desde la config de cada columna. Si hay un conector
+  de monday disponible en el chat, pedile a Claude que los lea. **No** montes un MCP local de monday:
+  es frágil en Windows y no hace falta.
+- **Revisar:** `/monday-vibe:revisar` chequea entorno, seguridad del token, stack y datos.
+- **Publicar:** `/monday-vibe:publicar` sube a GitHub y despliega en Vercel (token seguro).
+- **Exportar:** `/monday-vibe:exportar` produce los prompts para monday vibe.
+- **Modelos:** los de Claude Code (acá, no gastan créditos de monday) son DISTINTOS de los de monday
+  vibe (allá sí gastan). En vibe: Flash para UI, Opus casi nunca.
