@@ -57,6 +57,23 @@ duplicadas), agregá arriba una sección **"DECISIONES YA TOMADAS"** que:
 - aclare que esas decisiones **tienen prioridad sobre el código**.
 Sin esto, vibe intenta construir la app grande o elige la función equivocada.
 
+**⚠️ La cláusula de prioridad NO alcanza: BORRÁ el texto contradictorio.**
+Medido en una prueba ciega: cuando una decisión decía "no incluyas X" pero 1.400 líneas después
+el texto seguía listando X como opción, el auditor lo marcó igual como ambiguo —
+**lo más reciente le gana a la cláusula de prioridad**. Después de escribir las decisiones,
+recorré el resto del prompt y **eliminá o corregí cada frase que las contradiga**.
+
+**Tres trampas del código heredado que hay que neutralizar explícitamente:**
+1. **Ramas de mock / feature flags**: código tipo `if (!apiHabilitada()) return datosFalsos`.
+   Decí que en vibe siempre está habilitado y que **borre esas ramas** y no cree el módulo de mock.
+   Si no, vibe puede shipear una app que muestra datos falsos sin avisar.
+2. **Archivos con nombre engañoso**: si un archivo se llama `presupuestar.ts` pero también contiene
+   funciones esenciales para otra cosa, **decilo**, o vibe lo descarta entero por el nombre.
+3. **Funciones que no devuelven lo necesario**: si pedís algo que el código actual no puede hacer
+   (ej. "reintentá solo lo que falló" cuando la función devuelve un conteo, no la lista), o bajás
+   el pedido, o **autorizás explícitamente esa modificación puntual** ("esta es la única
+   modificación permitida al código").
+
 ### Etiquetas de status/dropdown: instruí leerlas EN VIVO
 Los índices hardcodeados sobreviven a un renombre pero se rompen si alguien **reordena** las
 etiquetas; leerlas en vivo sobrevive al reorden. Pedí las dos cosas: leer `settings_str` al iniciar
