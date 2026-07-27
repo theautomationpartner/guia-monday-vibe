@@ -189,7 +189,13 @@ Cuando esto esté ✔, corré **`/monday-vibe:exportar`** para generar los promp
 
 Errores que ya costaron créditos/tiempo. Aplicarlos de entrada evita que Vibe (o vos) los redescubra:
 
-- **Acceso a datos:** dentro de una app monday/Vibe, SIEMPRE `monday.api(query)` de `monday-sdk-js`. NO `fetch` directo (no hay token en el browser) NI `BoardSDK.executeGraphQL()` (no existe — Vibe lo suele alucinar).
+- **Acceso a datos:** dentro de una app monday/Vibe, para GraphQL crudo va SIEMPRE `monday.api(query)`
+  de `monday-sdk-js`. NO `fetch` directo (no hay token en el browser). Ojo: las apps de vibe traen
+  además un `BoardSDK` propio — existe, pero **no** sirve para GraphQL arbitrario
+  (`BoardSDK.executeGraphQL()` fue una fuente real de errores). Ante la duda, `monday.api()`.
+- **Estructura que genera vibe** (útil para que el traspaso sea 1:1): el código va en
+  `src/generated/` con subcarpetas `components/`, `components/steps/`, `services/` y `config/`,
+  en **`.jsx`/`.js` (no TypeScript)**.
 - **Columnas checkbox (boolean):** se escriben con `change_column_value` + JSON `{"checked":"true"}`. `change_simple_column_value` las **rechaza** con error explícito.
 - **Columnas file:** subir = mutation `add_file_to_column` por **multipart/form-data** contra `/v2/file` (no `/v2`). Vaciar = `update_assets_on_item(files: [])`. `change_simple_column_value` no sirve para files.
 - **Columnas board_relation (conectadas):** `text` viene **siempre `null`**. Hay que pedir `... on BoardRelationValue { display_value }`. Escribir = `change_column_value` con `{"item_ids":[<id>]}`.
