@@ -18,7 +18,9 @@ deja un **blueprint** claro antes de escribir una línea.
 
 ## El blueprint tiene que incluir
 1. **Tipo de app** (variant) y por qué.
-2. **Modelo de datos**: tabla de boards + columnas (nombre | column ID | tipo). ⚠️ Máximo **5 boards**.
+2. **Modelo de datos**: tabla de boards + columnas (nombre | column ID | tipo). ⚠️ La cantidad de
+   boards permitida **depende del plan** de la cuenta (techo de la API: 20) — verificalo antes de
+   cerrar el modelo. Si no entra, proponé cómo partir la app.
 3. **Mapa de pantallas**: nombre de negocio + una frase de propósito cada una.
 4. **Por pantalla**: qué muestra, qué acciones tiene, y sus estados (vacío / cargando / error).
 5. **Lecturas y escrituras a monday**: qué se lee, qué se escribe y con qué mutation.

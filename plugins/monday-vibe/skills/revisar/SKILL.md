@@ -62,7 +62,8 @@ Revisá el CSS/JSX buscando problemas de tamaño:
 ## E. Datos
 - ¿El `CLAUDE.md` tiene la tabla de boards/columnas con **IDs reales**? Si hay `TODO` o IDs de ejemplo
   → ⚠️ conseguilos antes de exportar (ver `${CLAUDE_PLUGIN_ROOT}/docs/REQUISITOS.md`).
-- ¿La app usa **5 boards o menos**? (límite de monday vibe).
+- ¿Cuántos boards usa la app? El límite por app **depende del plan** de la cuenta (techo de la API:
+  20). Si son muchos, marcalo para verificar en la cuenta destino antes de exportar.
 
 ## F. Cuentas (preguntale, no lo podés verificar solo)
 - GitHub y Vercel: ¿tiene cuenta?

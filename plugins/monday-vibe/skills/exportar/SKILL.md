@@ -44,7 +44,13 @@ mucha menos iteración visual. En el entregable indicá **qué screenshot va con
 
 ### 0d. Técnicas y límites oficiales de monday
 - **Datos por planilla**: un CSV/XLSX de ejemplo → vibe arma la estructura (fila = ítem, columna = campo).
-- **Máximo 5 boards** por app vibe. Si necesita más, repensá el modelo o partila.
+  Límite: **5.000 filas** por archivo (lo que sobra se trunca).
+- **Boards por app: el límite DEPENDE DEL PLAN.** El techo técnico de la API es **20 boards**
+  (`board_ids` acepta hasta 20) y la cantidad real permitida varía según el tier de la cuenta
+  (la doc de monday menciona tanto "5" como "hasta 20" en artículos distintos).
+  👉 **No asumas un número: verificalo en la cuenta del cliente** antes de diseñar el modelo de datos.
+  Si la app necesita más boards de los que permite ese plan, hay que partirla o reducir el modelo —
+  y eso se decide ANTES de gastar créditos.
 - **Modo Discuss/Chat** para dudas (no ejecuta código = más barato). Build solo para cambios reales.
 - **Si un build sale mal, revertí a la versión anterior** en vez de encadenar prompts de arreglo.
 - **Element selection**: apuntar a una parte de la app y promptear sobre eso (edición dirigida y barata).
@@ -68,6 +74,23 @@ Esta skill funciona igual sobre una app hecha "a su manera" (sin `/monday-vibe:i
 - **Idioma de la UI** y detalles visuales propios.
 
 ## 2. Estructurar en capas (datos → esqueleto → detalle → pulido)
+
+### ⚖️ Cuántos prompts: ni uno gigante, ni muchos fragmentos
+Cada mensaje a vibe cuesta (**~8 créditos de base** + lo del modelo), así que **menos prompts es más
+barato** — pero solo si cada uno es **completo y preciso**. La regla real:
+
+| Enfoque | Qué pasa |
+|---|---|
+| **Un solo mega-prompt con todo** | Vibe tiene que razonar demasiado, se saltea cosas → **rework** (lo más caro). Si sale mal, revertís y perdés todo. |
+| **Muchos prompts chiquitos** | Pagás la base una y otra vez, y vibe pierde contexto entre mensajes. |
+| ✅ **Un prompt COMPLETO por fase coherente** | Lo que funcionó en el caso más barato (~8 prompts para una app compleja, builds de 17-88 créditos). |
+
+**Criterio práctico:** una fase = algo que se puede construir y **verificar de una sola vez**
+(el modelo de datos, el esqueleto, una pantalla entera, el pulido). Que cada prompt sea
+auto-contenido y sin ambigüedad; no lo partas por partirlo.
+
+Para una app típica esto da **4 a 8 prompts**. Si te salen 20, estás fragmentando de más;
+si te sale 1 para 10 pantallas, estás pidiendo demasiado junto.
 
 **Prompt 0 — Prerequisito de datos (SIEMPRE primero):**
 ```

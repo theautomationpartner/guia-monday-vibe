@@ -97,7 +97,9 @@ Esa tabla **es parte del prompt de vibe**.
 
 - [ ] **Tipo de app** (variant): board view / item view / dashboard widget / standalone.
 - [ ] **Idioma de la UI** (lo ve el cliente: español o inglés — no es el idioma en que vos programás).
-- [ ] **Los boards ya existen** y tenés sus IDs (⚠️ vibe soporta **máximo 5 boards** por app).
+- [ ] **Los boards ya existen** y tenés sus IDs. ⚠️ **La cantidad de boards por app depende del plan**
+      (techo técnico de la API: 20). Verificá el límite en la cuenta del cliente antes de diseñar el
+      modelo de datos — si no entra, hay que partir la app.
 - [ ] **Qué NO va a hacer la app** (el scope acotado ahorra créditos: todos los casos baratos lo tenían).
 
 ---
