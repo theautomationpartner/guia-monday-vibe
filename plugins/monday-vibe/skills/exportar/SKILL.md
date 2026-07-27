@@ -139,13 +139,21 @@ una sola vez**. Partí solo cuando:
 - la verificación se vuelve imposible de una (no sabrías qué falló), o
 - una parte necesita un modelo distinto (la lógica pesada en Opus, el resto en Flash).
 
-**Para una app típica: 3 a 5 prompts.** Estructura recomendada:
-1. **Datos + esqueleto** (boards, stack, layout, navegación) — Flash
-2. **Todas las pantallas** con su comportamiento completo — Sonnet
-3. **Motor de cálculo / lógica pesada** (si la hay, aislado) — Opus
-4. **Pulido** — Flash
+**El techo real es el límite de pegado del chat de vibe: ~166.000 caracteres por mensaje.**
+Medilo (`wc -c`) y armá los prompts lo más grandes posible **sin pasar el 70%** de ese límite
+(deja margen). Menos mensajes = menos builds = menos créditos.
+
+**Para una app típica: 2 a 4 prompts.** Estructura recomendada, fusionando hasta llenar:
+1. **Datos + esqueleto + pantallas** (mapa de columnas, layout, navegación, UI) — Sonnet
+2. **Lógica de negocio / cálculos** (aislado, es donde vibe más se equivoca) — Opus
+3. **Escrituras + pulido** (capa que escribe en monday, más ajustes finales) — Sonnet
 
 Si te salen 8+, estás fragmentando de más y pagando builds al pedo.
+Si un bloque supera el 70% del límite, partilo por ahí — no por criterio estético.
+
+> ⚠️ **Contrapeso:** fusionar abarata pero **dificulta verificar**. Si un build sale mal y metiste
+> 3 cosas en un prompt, no sabés cuál falló. Regla práctica: fusioná lo que se **verifica junto**
+> (datos+pantallas se ven de una), y dejá aparte lo que querés poder revertir solo (los cálculos).
 
 **Prompt 0 — Prerequisito de datos (SIEMPRE primero):**
 ```
