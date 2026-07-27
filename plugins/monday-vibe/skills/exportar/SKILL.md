@@ -43,6 +43,28 @@ los huecos que sobreviven son justo los que escriben mal en la base.
 **Lo que NO hace falta pegar:** los componentes de UI (vibe los reescribe con su propio design
 system) — para eso van los screenshots.
 
+⚠️ **No te olvides del wrapper del SDK.** Si pegás servicios que importan un helper
+(`mondayApi`, `apiCall`…), pegá también ese archivo o al menos su **contrato**: qué devuelve
+(`res.data` vs `res`) y si **lanza** ante `errors`. Medido: sin eso, toda la lógica de reintentos
+de los servicios queda rota, porque monday resuelve OK aunque la respuesta traiga errores.
+
+### Al pegar código de una app más grande: acotá el alcance explícitamente
+Si el código trae features que NO van a esta app (otros flujos, tipos de más, funciones
+duplicadas), agregá arriba una sección **"DECISIONES YA TOMADAS"** que:
+- diga qué construir y **qué ignorar** del código ("vas a ver X en el código: ignoralo");
+- resuelva las **contradicciones internas** del código (dos funciones que hacen lo mismo distinto,
+  constantes viejas que el board ya no acepta) diciendo **cuál gana**;
+- aclare que esas decisiones **tienen prioridad sobre el código**.
+Sin esto, vibe intenta construir la app grande o elige la función equivocada.
+
+### Etiquetas de status/dropdown: instruí leerlas EN VIVO
+Los índices hardcodeados sobreviven a un renombre pero se rompen si alguien **reordena** las
+etiquetas; leerlas en vivo sobrevive al reorden. Pedí las dos cosas: leer `settings_str` al iniciar
+para armar el mapa etiqueta→índice, y **caer al índice documentado** si no hay coincidencia.
+Además, listá las columnas cuyas etiquetas **deciden reglas de negocio** (condición fiscal, condición
+de pago, estados que bloquean) y pedí que **avise en pantalla** si no coinciden con lo esperado,
+en vez de asumir.
+
 ⚠️ **Lo caro no es pegar código — es hacer que vibe razone, explore o itere.** Pegar código como
 "referencia" y después iterar 20 veces (peor en Opus) es el anti-patrón que quemó miles de créditos.
 
