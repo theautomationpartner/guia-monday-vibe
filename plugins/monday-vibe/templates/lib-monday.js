@@ -59,9 +59,15 @@ export async function api(query, variables = {}) {
   }
 
   // Fuera de monday (Vercel/local real): proxy serverless. El token vive en el server.
+  // Si el proxy tiene la guardia activada (APP_PROXY_KEY en Vercel), mandamos la clave
+  // en el header x-app-key (VITE_APP_PROXY_KEY, no-secreto: solo frena bots casuales).
+  const headers = { "Content-Type": "application/json" };
+  const proxyKey = import.meta.env?.VITE_APP_PROXY_KEY;
+  if (proxyKey) headers["x-app-key"] = proxyKey;
+
   const res = await fetch("/api/monday", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify({ query, variables }),
   });
   if (!res.ok) throw new Error(`Proxy monday respondió ${res.status}`);
