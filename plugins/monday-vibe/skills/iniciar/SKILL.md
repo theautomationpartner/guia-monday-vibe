@@ -31,7 +31,17 @@ Verificá que exista Node (`node --version`). Si falla, indicá instalar Node LT
 Si el usuario reporta el error de PowerShell "la ejecución de scripts está deshabilitada", indicá:
 `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` (una vez, responder S).
 
-## 3. Creá el proyecto
+## 3. Decidí DÓNDE crear el proyecto (⚠️ nunca pises archivos)
+1. Mirá la carpeta actual. **Si ya tiene un `package.json`, un `src/` o cualquier proyecto**, NO
+   escribas nada ahí: preguntá si querés crear una subcarpeta nueva (sugerí el nombre de la app en
+   kebab-case) o cambiar de directorio.
+2. Si la carpeta está vacía, usala.
+3. **Antes de escribir cada archivo, verificá que no exista.** Si alguno existe, pará y preguntá
+   qué hacer. Nunca sobrescribas trabajo del usuario en silencio.
+
+Confirmá la ruta elegida con el usuario antes de seguir.
+
+## 4. Creá el proyecto
 Copiá los archivos de `${CLAUDE_PLUGIN_ROOT}/templates/` a la carpeta del proyecto:
 
 | Template | Destino | Notas |
@@ -51,16 +61,20 @@ Además, en el `CLAUDE.md` del proyecto agregá al final una sección **"## Dato
 - Nombre, tipo de app (variant) e **idioma de la UI** elegidos.
 - La tabla de boards/columnas con IDs reales (o el `TODO` si aún no los tiene).
 
-## 4. Instalá dependencias y VERIFICÁ que arranca
+## 5. Instalá dependencias y VERIFICÁ que compila
 1. Corré `npm install` en la carpeta del proyecto. Si falla, mostrá el error y sugerí el arreglo
    (normalmente: Node desactualizado o la execution policy de Windows).
-2. **Verificá el arranque**: corré `npm run dev` y confirmá que compila sin errores.
-   - Si falla el import `@vibe/core/tokens` o algún componente de `@vibe/core`: la API de Vibe pudo
-     haber cambiado de versión. Verificá los nombres reales (con el MCP opcional `@vibe/mcp` o la
-     doc en vibe.monday.com) y ajustá `main.jsx`/`App.jsx`. **No dejes el proyecto sin verificar.**
-3. Después completá `BOARDS` en `src/lib/monday.js` con los board IDs reales del paso 1.
+2. **Verificá con `npm run build`** (NO con `npm run dev`).
+   ⚠️ `npm run dev` levanta un servidor que **no termina nunca** y te deja colgado. Para comprobar
+   que el proyecto compila usá siempre `npm run build`.
+   - Si falla el import de `@vibe/core/tokens` o de algún componente: la API de Vibe pudo haber
+     cambiado de versión. Verificá los nombres reales (con el MCP opcional `@vibe/mcp` o la doc en
+     vibe.monday.com) y ajustá `main.jsx`/`App.jsx`. **No dejes el proyecto sin verificar.**
+3. Completá `BOARDS` en `src/lib/monday.js` con los board IDs reales del paso 1.
+4. Creá `.env.local` copiando `.env.example`, con `VITE_MONDAY_MOCK=1` y `MONDAY_TOKEN=` **vacío**
+   (el token lo carga el usuario cuando quiera datos reales; nunca se lo pidas por chat).
 
-## 5. Cerrá contando los próximos pasos (breve y claro)
+## 6. Cerrá contando los próximos pasos (breve y claro)
 
 ```
 ✅ Proyecto listo: <nombre>  (tipo: <variant>, idioma: <es/en>)
