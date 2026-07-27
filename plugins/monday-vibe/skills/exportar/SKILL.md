@@ -19,11 +19,29 @@ debe comportarse**, en vocabulario de monday (variant, boards, columnas, compone
 ## 0. Antes de escribir nada
 
 ### 0a. Elegí la estrategia
-- **A) Código verbatim** (recomendada si el código ya está probado y en el stack Vibe): pegá el código
-  exacto con la orden *"construí EXACTO con este código, NO reescribas la lógica"*. Vibe **transcribe**
-  en vez de razonar → builds baratos y cortos. (Caso real: app compleja, builds de 17-88 créditos.)
-- **B) Spec de comportamiento** (si no hay código propio, o está fuera del stack Vibe): describí qué
-  debe existir y cómo se comporta, sin código. Es lo que monday recomienda oficialmente.
+- **A) Código verbatim (RECOMENDADA siempre que exista código probado):** pegá el código exacto con la
+  orden *"construí EXACTO con este código, NO reescribas la lógica"*. Vibe **transcribe** en vez de
+  razonar → builds baratos y cortos. Funciona **aunque el código NO esté en el stack Vibe**
+  (TypeScript, componentes propios, etc.): lo que se transcribe es la lógica, no la UI.
+- **B) Spec de comportamiento** (solo si NO hay código): describí qué debe existir y cómo se comporta.
+
+### ⭐ Qué código pegar (medido con pruebas ciegas)
+Describir con palabras lo que ya está en código **siempre pierde información**. Pegá los archivos
+en este orden de prioridad — son los que más huecos eliminan:
+
+| Prioridad | Qué pegar | Qué resuelve |
+|---|---|---|
+| 1️⃣ | **El mapa de columnas** (el archivo con los IDs de boards/columnas, índices de status, etiquetas) | Elimina de un saque casi todos los bloqueantes de "falta el ID de X" |
+| 2️⃣ | **La capa de ESCRITURA** (los servicios que crean/actualizan ítems) | Qué columna recibe qué valor, en qué orden, cómo se renombra, cómo no duplicar. **Es lo que corrompe datos si falta.** |
+| 3️⃣ | **La lógica de negocio pura** (cálculos, validaciones, reglas) | Fórmulas exactas, redondeos, umbrales |
+| 4️⃣ | **Los tipos / modelo de dominio** | Nombres de campo y valores posibles |
+
+⚠️ **El error clásico:** pegar solo los cálculos y describir las escrituras con palabras. Medido en
+una prueba ciega real: eso deja documentado *"cómo calcular la plata pero no cómo asentarla"* — y
+los huecos que sobreviven son justo los que escriben mal en la base.
+
+**Lo que NO hace falta pegar:** los componentes de UI (vibe los reescribe con su propio design
+system) — para eso van los screenshots.
 
 ⚠️ **Lo caro no es pegar código — es hacer que vibe razone, explore o itere.** Pegar código como
 "referencia" y después iterar 20 veces (peor en Opus) es el anti-patrón que quemó miles de créditos.
