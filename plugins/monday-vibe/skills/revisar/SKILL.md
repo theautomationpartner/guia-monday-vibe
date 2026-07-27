@@ -46,6 +46,10 @@ exactamente cómo arreglarlo**. No dejes al usuario adivinando.
   **sobran**: monday ya los dibuja alrededor del iframe. Es trabajo que se tira y hace que la app
   quede diseñada para pantalla completa en vez del espacio real.
 
+> ⚠️ **Verificá en el CÓDIGO, no en el README.** Los READMEs se desactualizan: pueden describir
+> componentes que ya se borraron (o no mencionar los que se agregaron). Todo hallazgo de este
+> reporte tiene que salir de archivos reales, no de documentación.
+
 Revisá el CSS/JSX buscando problemas de tamaño:
 - ⚠️ **Anchos o altos fijos en px** para el layout (`width: 1200px`, `height: 800px`) → tiene que ser fluido.
 - ⚠️ **Colores hardcodeados** (`#fff`, `#323338`) en fondos/textos → se rompe en tema oscuro.
