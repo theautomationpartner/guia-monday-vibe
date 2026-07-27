@@ -70,12 +70,32 @@ Regla práctica: **si vas a iterar más de 3–4 veces, el flujo local ya te con
 
 ---
 
+## Controlar el gasto desde la cuenta (para admins)
+
+monday te deja **ver y limitar** el consumo, no solo sufrirlo:
+- **Administración → AI governance → Credits Usage**: ver cuántos créditos se consumieron, **qué
+  features los están gastando**, y comprar más si hace falta.
+- Ahí mismo se pueden **poner límites de uso** en la cuenta.
+- El sistema avisa al **80%** y al **100%** del cupo mensual. Pasado el límite, el uso de IA puede
+  quedar restringido.
+- Los créditos son un **pool compartido** entre todas las capacidades de IA (vibe, agentes,
+  notetaker, etc.) — no es un cupo exclusivo de vibe.
+
+> Antes de arrancar un proyecto con un cliente, mirá ahí cuántos créditos hay disponibles. Es lo que
+> te dice si tenés margen o si conviene ser especialmente cuidadoso.
+
 ## Reglas de oro (Mundo B)
 
 1. **Elegí el modelo antes de cada prompt.** Flash por defecto; subí solo si hace falta.
+   *(monday: "es la forma más efectiva de manejar el consumo".)*
 2. **Nunca Opus** para scaffolding, UI o ajustes visuales.
 3. **Preguntá en modo Discuss**, no gastando un Build.
 4. **Si un build sale mal, revertí a la versión anterior** en vez de encadenar prompts de arreglo
-   (acumulan bugs y créditos) — es la recomendación oficial de monday.
-5. **Agrupá cambios afines** en un solo prompt (cada mensaje cuesta).
-6. **Explorá la UX en local**, no en vibe.
+   (acumulan bugs y créditos) — recomendación oficial de monday.
+5. **Instrucciones granulares.** Dejar que la IA decida = más razonamiento = más créditos. Decile
+   exactamente qué hacer, no "resolvelo vos".
+6. **Lo importante al principio o al final** del prompt (es donde el modelo más presta atención).
+7. **No pidas búsquedas web** salvo que sean imprescindibles: gastan pasos extra.
+8. **Adjuntá en vez de describir**: CSV/XLSX para los datos, imagen para el diseño.
+9. **Agrupá cambios afines** en un solo prompt (cada mensaje tiene costo base).
+10. **Explorá la UX en local**, no en vibe.

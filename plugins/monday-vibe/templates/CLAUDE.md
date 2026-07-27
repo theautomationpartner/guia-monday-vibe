@@ -146,6 +146,17 @@ el prompt final Y el parámetro `variant` de `vibe_create`. Valores reales de la
 Los boards existentes se conectan como fuente de datos vía `board_ids` (multi-board en
 `object`/`object_fullstack`; un board host en las vistas). Si no pasás boards, vibe crea uno.
 
+## Rendimiento con boards grandes (recomendaciones oficiales de monday)
+Si el board tiene muchos ítems, la app se pone lenta. Aplicá desde el inicio:
+- **Traer solo lo necesario**: pedí únicamente las columnas que usás (`column_values(ids: [...])`),
+  nunca todas. Paginá con `items_page` + `cursor`.
+- **Usar la API de agregación** cuando solo necesitás totales/conteos, en vez de traer todos los
+  ítems y sumar en el cliente.
+- **Cachear** los datos que no cambian seguido (catálogos, configuración) en memoria o en
+  `localStorage`, y refrescarlos cada cierto intervalo en vez de en cada render.
+- Traer los datos de referencia (tarifarios, configuración) **una sola vez al iniciar la app**, no
+  por cada pantalla.
+
 ## Modelo de datos = columnas de board
 Cuando la data vive en monday, documentá el modelo como **boards + columnas** (nombre, tipo de columna monday: `status`, `text`, `numbers`, `date`, `person`, `dropdown`, etc.). Ese mapeo ES parte del prompt de vibe.
 

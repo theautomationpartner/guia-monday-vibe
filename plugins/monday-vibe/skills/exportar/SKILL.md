@@ -135,12 +135,16 @@ equivoca si le dejás lugar a inventar.
 **Prompt final — Pulido:** textos literales, validaciones, detalles visuales.
 
 ## 3. Cómo redactar
+- **Lo más importante va al PRINCIPIO o al FINAL del prompt** (recomendación oficial de monday: es
+  donde el modelo presta más atención). No entierres una regla clave en el medio.
 - **Vocabulario monday**: "columna de tipo status", "board", "ítem", "grupo".
 - **Componentes Vibe por nombre**: "un `Dropdown` de Vibe", "un `Dialog` de confirmación".
 - **Concreto y verificable**: no "validar el formulario", sino "el CUIT debe tener 11 dígitos; si no,
-  mostrar error debajo del input".
+  mostrar error debajo del input". monday lo dice explícito: **instrucciones granulares consumen menos
+  créditos** que dejar que la IA decida (decidir = más razonamiento = más créditos).
 - **Textos literales entre comillas**, tal como deben aparecer.
 - **Sin jerga local**: nada de nombres de archivo, hooks internos ni "como en el repo".
+- **No pidas búsquedas web** salvo que sean imprescindibles: disparan pasos extra y gastan créditos.
 
 ## 4. Asigná el modelo a cada prompt (la mayor palanca de ahorro)
 | Modelo | Costo | Para |
@@ -180,6 +184,10 @@ Producí **`vibe-prompts.md`** en la raíz del proyecto con:
 Después de CADA prompt: abrí la app real y probá esa pantalla. Para features con datos, confirmá que
 lea del **board real**, no de datos por defecto. Si falta algo, corregí con un prompt **puntual**
 (modelo barato), no regeneres todo.
+
+**Truco oficial de monday:** en modo **Discuss** (barato, no ejecuta código) **pedile a vibe que te
+explique qué construyó**. Es la forma más rápida de detectar que "dijo que sí" pero dejó algo
+hardcodeado o sin conectar — sin gastar un build para descubrirlo.
 
 ## Antes de entregar
 Releé cada prompt preguntándote: *"¿alguien que nunca vio el código podría reconstruir esta pantalla
