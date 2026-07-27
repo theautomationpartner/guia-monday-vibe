@@ -11,30 +11,86 @@ pruebe → y recién al final la pasás a **monday vibe** con un prompt preparad
 
 ---
 
-## Instalación (una sola vez)
+## Instalación (una sola vez) — paso a paso
 
-En Claude Code, pegá estos dos comandos:
+> Probado en Windows + VS Code. Toma unos 5 minutos.
 
+### Paso 0 — Requisitos previos
+
+Necesitás **Node.js 18+**, **git** y **GitHub CLI (`gh`)**. Verificalo en una terminal:
+
+```bash
+node --version    # v18 o superior
+git --version
+gh --version      # si falta: winget install GitHub.cli
 ```
-/plugin marketplace add https://github.com/theautomationpartner/guia-monday-vibe.git
-/plugin install monday-vibe@guia-monday-vibe
+
+**En Windows**, si algún comando falla con *"la ejecución de scripts está deshabilitada"*, corré esto
+una vez (respondé `S`):
+
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 ```
 
-Si te pide recargar, corré `/reload-plugins`. Listo, ya lo tenés para siempre.
+### Paso 1 — Autenticarte con GitHub (⚠️ imprescindible)
 
-> ⚠️ **Usá la URL HTTPS completa** (como está arriba), no la forma corta
-> `theautomationpartner/guia-monday-vibe`: esa intenta clonar por **SSH** y falla con
-> *"SSH host key is not in your known_hosts file"* si nunca te conectaste por SSH a GitHub.
+El repo es **privado**, así que git necesita credenciales que pueda entregar **sin abrir ventanas**
+(el instalador de plugins no puede mostrar diálogos). Corré estos dos comandos:
 
-**Requisitos:** el repo es privado, así que necesitás (a) acceso al repo en la organización y
-(b) credenciales de git para GitHub. Para verificar que las tenés:
-
+```bash
+gh auth login          # elegí GitHub.com → HTTPS → autenticar por navegador
+gh auth setup-git      # deja a gh como proveedor de credenciales de git
 ```
+
+**Verificá que funcione** (esto tiene que clonar sin pedirte nada):
+
+```bash
 git clone --depth 1 https://github.com/theautomationpartner/guia-monday-vibe.git /tmp/prueba
+rm -rf /tmp/prueba
 ```
 
-Si eso clona bien, la instalación va a funcionar. Si te pide usuario/contraseña o falla, configurá
-las credenciales primero con `gh auth login` (elegí **HTTPS** cuando pregunte el protocolo).
+Si clona bien → seguí. Si pide usuario/contraseña → repetí `gh auth setup-git`.
+
+> 💡 Sin el `gh auth setup-git`, la instalación falla con
+> *"Cannot prompt because user interactivity has been disabled"*.
+
+### Paso 2 — Agregar el marketplace
+
+En Claude Code (VS Code):
+
+1. En el chat escribí `/plu` y elegí **"Manage plugins"** (en la extensión **no** existe el comando
+   `/plugin`; es esa opción del menú).
+2. Andá a la pestaña **"Marketplaces"**.
+3. Pegá esta URL **completa** en la cajita y dale **Add**:
+
+```
+https://github.com/theautomationpartner/guia-monday-vibe.git
+```
+
+> ⚠️ **Usá la URL HTTPS completa.** La forma corta `theautomationpartner/guia-monday-vibe` intenta
+> clonar por **SSH** y falla con *"SSH host key is not in your known_hosts file"*.
+
+Tiene que aparecer **`guia-monday-vibe`** en la lista, sin errores rojos.
+
+### Paso 3 — Instalar el plugin
+
+1. Pestaña **"Plugins"**.
+2. Aparece **`monday-vibe`** → clickealo.
+3. Elegí **"Install for you"** (*Available in all your projects*).
+4. Dale al botón **"Restart"** que aparece arriba.
+
+### Paso 4 — Verificar
+
+En el chat escribí (sin mandar):
+
+```
+/monday-vibe:
+```
+
+Se tienen que desplegar los **6 comandos**: `iniciar`, `planear`, `revisar`, `publicar`, `exportar`,
+`adaptar`.
+
+✅ **Listo.** Probalo con `/monday-vibe:revisar` — te da un diagnóstico de tu entorno.
 
 ---
 
@@ -91,11 +147,15 @@ Otros documentos útiles:
 
 ## Si algo falla al instalar
 
+Estos dos son los que le pasan a **casi todos** la primera vez:
+
 | Error | Causa | Solución |
 |---|---|---|
-| *"SSH host key is not in your known_hosts file"* | Usaste la forma corta `owner/repo` → intenta SSH | Usá la **URL HTTPS completa** (`https://github.com/...git`) |
-| *"Could not read from remote repository"* | Sin acceso al repo o sin credenciales | Pedí acceso a la org y corré `gh auth login` (protocolo **HTTPS**) |
-| El plugin instala pero no aparecen los comandos | Falta recargar | `/reload-plugins`, o reiniciá Claude Code |
+| *"SSH host key is not in your known_hosts file"* | Usaste la forma corta `owner/repo` → git intenta **SSH** | Usá la **URL HTTPS completa** (`https://github.com/...git`) |
+| *"Cannot prompt because user interactivity has been disabled"* / *"unable to get password"* | git necesita credenciales pero no puede preguntarte | Corré **`gh auth setup-git`** y reiniciá VS Code |
+| *"Could not read from remote repository"* | Sin acceso al repo | Pedí que te agreguen a la organización |
+| No aparece `/plugin` al escribir `/` | En la extensión de VS Code no existe ese comando | Escribí `/plu` y elegí **"Manage plugins"** |
+| Instalado pero no aparecen los comandos | Falta reiniciar | Botón **Restart**, o cerrá y abrí VS Code completo |
 | No encontrás los comandos | Llevan prefijo | Escribí `/monday-vibe:` y se despliegan los 6 |
 
 ---
