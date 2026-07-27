@@ -15,82 +15,205 @@ pruebe → y recién al final la pasás a **monday vibe** con un prompt preparad
 
 > Probado en Windows + VS Code. Toma unos 5 minutos.
 
-### Paso 0 — Requisitos previos
+### 📍 Antes de empezar: los dos lugares donde vas a trabajar
 
-Necesitás **Node.js 18+**, **git** y **GitHub CLI (`gh`)**. Verificalo en una terminal:
+Todo pasa dentro de **VS Code**, en dos lugares distintos. No los confundas:
 
-```bash
-node --version    # v18 o superior
-git --version
-gh --version      # si falta: winget install GitHub.cli
+```
+┌─────────────────────────────────────────────────────────────┐
+│  VS Code                                                     │
+│                                                              │
+│   ┌──────────────────────┐   ┌───────────────────────────┐  │
+│   │                      │   │  💬 EL CHAT DE CLAUDE     │  │
+│   │   tus archivos       │   │                           │  │
+│   │                      │   │  (panel lateral)          │  │
+│   │                      │   │  Acá le escribís a Claude │  │
+│   ├──────────────────────┤   │  y ponés los comandos     │  │
+│   │ ⌨️ LA TERMINAL       │   │  que empiezan con /       │  │
+│   │                      │   │                           │  │
+│   │ Acá van los comandos │   │                           │  │
+│   │ tipo node, git, gh   │   │                           │  │
+│   └──────────────────────┘   └───────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-**En Windows**, si algún comando falla con *"la ejecución de scripts está deshabilitada"*, corré esto
-una vez (respondé `S`):
+- **⌨️ La terminal** → menú **Terminal → New Terminal** (o `Ctrl + ñ`). Aparece abajo.
+  Ahí van los comandos como `node --version`, `git`, `gh`.
+- **💬 El chat de Claude** → el panel donde le escribís a Claude.
+  Ahí van los comandos que empiezan con `/`, como `/monday-vibe:iniciar`.
+
+> Regla simple: **si el comando empieza con `/`, va en el CHAT. Si no, va en la TERMINAL.**
+
+---
+
+### Paso 0 — Requisitos previos · ⌨️ TERMINAL
+
+Abrí la terminal (**Terminal → New Terminal**) y pegá estos comandos, uno por uno (Enter después de
+cada uno):
+
+```bash
+node --version
+git --version
+gh --version
+```
+
+Cada uno tiene que devolverte un número de versión:
+- **node** → tiene que ser **v18** o más alto. Si dice "no se reconoce", instalá Node LTS desde
+  [nodejs.org](https://nodejs.org).
+- **git** → si falta, instalalo desde [git-scm.com](https://git-scm.com/download/win).
+- **gh** → si falta, corré: `winget install GitHub.cli` y después **cerrá y abrí la terminal**.
+
+**Solo en Windows**, si alguno falla diciendo *"la ejecución de scripts está deshabilitada"*, pegá
+esto una vez y respondé `S`:
 
 ```powershell
 Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 ```
 
-### Paso 1 — Autenticarte con GitHub (⚠️ imprescindible)
+---
 
-El repo es **privado**, así que git necesita credenciales que pueda entregar **sin abrir ventanas**
-(el instalador de plugins no puede mostrar diálogos). Corré estos dos comandos:
+### Paso 1 — Conectarte con GitHub · ⌨️ TERMINAL
 
-```bash
-gh auth login          # elegí GitHub.com → HTTPS → autenticar por navegador
-gh auth setup-git      # deja a gh como proveedor de credenciales de git
-```
-
-**Verificá que funcione** (esto tiene que clonar sin pedirte nada):
+El repo es **privado**, así que hay que darle a git una forma de identificarte **sin abrir ventanitas**
+(el instalador de plugins no puede mostrarlas). En la terminal:
 
 ```bash
-git clone --depth 1 https://github.com/theautomationpartner/guia-monday-vibe.git /tmp/prueba
-rm -rf /tmp/prueba
+gh auth login
 ```
 
-Si clona bien → seguí. Si pide usuario/contraseña → repetí `gh auth setup-git`.
+Te va a hacer varias preguntas — respondé así (con las flechas ↑↓ y Enter):
 
-> 💡 Sin el `gh auth setup-git`, la instalación falla con
-> *"Cannot prompt because user interactivity has been disabled"*.
+| Pregunta | Respondé |
+|---|---|
+| *What account do you want to log into?* | **GitHub.com** |
+| *What is your preferred protocol...?* | **HTTPS** ← importante |
+| *Authenticate Git with your GitHub credentials?* | **Yes** |
+| *How would you like to authenticate?* | **Login with a web browser** |
 
-### Paso 2 — Agregar el marketplace
+Te muestra un código, apretás Enter, se abre el navegador, pegás el código y autorizás.
 
-En Claude Code (VS Code):
+Después, **este comando es el que casi todos se olvidan** (sin él la instalación falla):
 
-1. En el chat escribí `/plu` y elegí **"Manage plugins"** (en la extensión **no** existe el comando
-   `/plugin`; es esa opción del menú).
-2. Andá a la pestaña **"Marketplaces"**.
-3. Pegá esta URL **completa** en la cajita y dale **Add**:
+```bash
+gh auth setup-git
+```
+
+**Comprobá que quedó bien** — esto tiene que funcionar sin pedirte usuario ni contraseña:
+
+```bash
+git clone --depth 1 https://github.com/theautomationpartner/guia-monday-vibe.git prueba-borrar
+```
+
+Si clonó, borrá la carpeta de prueba y seguí:
+
+```bash
+rm -rf prueba-borrar
+```
+
+> ❌ ¿Te dice *"Could not read from remote repository"*? No tenés acceso al repo → pedí que te
+> agreguen a la organización en GitHub.
+
+---
+
+### Paso 2 — Agregar el marketplace · 💬 CHAT
+
+**2.1** En el **chat de Claude**, escribí `/plu` (así, incompleto). Se despliega un menú y elegís
+**"Manage plugins"**:
+
+```
+┌────────────────────────────────┐
+│  Customize                     │
+│  ▶ Manage plugins        ← ESTA│
+├────────────────────────────────┤
+│  /plu                          │
+└────────────────────────────────┘
+```
+
+> 💡 En la extensión de VS Code **no existe** un comando `/plugin`. Se entra por acá.
+
+**2.2** Se abre la ventana **"Manage Plugins"**. Clickeá la pestaña **"Marketplaces"**:
+
+```
+┌─ Manage Plugins ─────────────────────────────── ✕ ─┐
+│                                                     │
+│   Plugins    [ Marketplaces ]  ← clickeá acá        │
+│   ─────────────────────────────────────────────     │
+│                                                     │
+│   ┌───────────────────────────────┐  ┌───────┐     │
+│   │ pegá la URL acá               │  │  Add  │     │
+│   └───────────────────────────────┘  └───────┘     │
+└─────────────────────────────────────────────────────┘
+```
+
+**2.3** Pegá esta dirección **completa** en la cajita y dale **Add**:
 
 ```
 https://github.com/theautomationpartner/guia-monday-vibe.git
 ```
 
-> ⚠️ **Usá la URL HTTPS completa.** La forma corta `theautomationpartner/guia-monday-vibe` intenta
-> clonar por **SSH** y falla con *"SSH host key is not in your known_hosts file"*.
+> ⚠️ Copiala **entera**, con el `https://` del principio y el `.git` del final. Si ponés solo
+> `theautomationpartner/guia-monday-vibe`, falla con un error de SSH.
 
-Tiene que aparecer **`guia-monday-vibe`** en la lista, sin errores rojos.
+✅ **Tiene que quedar así** (sin texto rojo):
 
-### Paso 3 — Instalar el plugin
+```
+┌─ Manage Plugins ─────────────────────────────── ✕ ─┐
+│   Plugins    Marketplaces (1)                       │
+│   ─────────────────────────────────────────────     │
+│   guia-monday-vibe                          ⟳  🗑    │
+│   Git: https://github.com/theautomation...          │
+└─────────────────────────────────────────────────────┘
+```
 
-1. Pestaña **"Plugins"**.
-2. Aparece **`monday-vibe`** → clickealo.
-3. Elegí **"Install for you"** (*Available in all your projects*).
-4. Dale al botón **"Restart"** que aparece arriba.
+---
 
-### Paso 4 — Verificar
+### Paso 3 — Instalar el plugin · 💬 CHAT
 
-En el chat escribí (sin mandar):
+**3.1** En la misma ventana, clickeá la pestaña **"Plugins"**. Aparece **`monday-vibe`** → clickealo.
+
+**3.2** Te pregunta dónde instalarlo. Elegí la **primera** opción:
+
+```
+┌─────────────────────────────────────────────┐
+│  ▶ Install for you              ← ESTA      │
+│    Available in all your projects           │
+├─────────────────────────────────────────────┤
+│    Install for this project                 │
+│    Install locally                          │
+└─────────────────────────────────────────────┘
+```
+
+> Va a aparecer un aviso de "asegurate de confiar en el plugin". Es el mensaje estándar para
+> cualquier plugin — este lo hicimos nosotros, podés seguir tranquilo.
+
+**3.3** Arriba aparece una barra con un botón **"Restart"** → clickealo.
+
+---
+
+### Paso 4 — Verificar que funcionó · 💬 CHAT
+
+En el chat escribí esto **sin mandarlo** (solo tipealo):
 
 ```
 /monday-vibe:
 ```
 
-Se tienen que desplegar los **6 comandos**: `iniciar`, `planear`, `revisar`, `publicar`, `exportar`,
-`adaptar`.
+Se tienen que desplegar los **6 comandos**:
 
-✅ **Listo.** Probalo con `/monday-vibe:revisar` — te da un diagnóstico de tu entorno.
+```
+/monday-vibe:iniciar     · crear una app nueva
+/monday-vibe:planear     · pensar la app antes de codear
+/monday-vibe:revisar     · chequear que esté todo bien
+/monday-vibe:publicar    · subir a GitHub + Vercel
+/monday-vibe:exportar    · generar el prompt para monday vibe
+/monday-vibe:adaptar     · convertir una app hecha con otro stack
+```
+
+✅ **Si los ves, ya está instalado.** Probalo mandando `/monday-vibe:revisar`: te hace un diagnóstico
+de tu entorno y te dice si falta algo.
+
+> 📸 *Los esquemas de arriba son dibujos. Si querés agregar capturas de pantalla reales al README,
+> mirá [`docs/img/`](docs/img/) — está todo listo, solo hay que soltar las imágenes.*
 
 ---
 
