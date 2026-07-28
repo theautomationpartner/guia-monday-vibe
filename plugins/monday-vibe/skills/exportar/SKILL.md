@@ -102,11 +102,12 @@ mucha menos iteración visual. En el entregable indicá **qué screenshot va con
 ### 0d. Técnicas y límites oficiales de monday
 - **Datos por planilla**: un CSV/XLSX de ejemplo → vibe arma la estructura (fila = ítem, columna = campo).
   Límite: **5.000 filas** por archivo (lo que sobra se trunca).
-- **Boards por app: el límite DEPENDE DEL PLAN.** El techo técnico de la API es **20 boards**
-  (`board_ids` acepta hasta 20) y la cantidad real permitida varía según el tier de la cuenta
-  (la doc de monday menciona tanto "5" como "hasta 20" en artículos distintos).
-  👉 **No asumas un número: verificalo en la cuenta del cliente** antes de diseñar el modelo de datos.
-  Si la app necesita más boards de los que permite ese plan, hay que partirla o reducir el modelo —
+- **Boards por app: MÁXIMO 5.** Es un límite fijo del producto, no depende del plan
+  (fuente: base de conocimiento oficial de monday, *"vibe apps que usen datos de hasta 5 boards"*).
+  ⚠️ **No lo confundas** con los límites de la columna *Connect Boards* (Basic 1 / Standard 5 /
+  Pro 20 / Enterprise 200): esos son otra cosa. Y aunque la API acepte hasta 20 `board_ids`,
+  el límite del producto es 5.
+  👉 Si la app necesita más de 5 boards, hay que **partirla en varias apps** o reducir el modelo,
   y eso se decide ANTES de gastar créditos.
 - **Modo Discuss/Chat** para dudas (no ejecuta código = más barato). Build solo para cambios reales.
 - **Si un build sale mal, revertí a la versión anterior** en vez de encadenar prompts de arreglo.
