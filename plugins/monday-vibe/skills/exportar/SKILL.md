@@ -63,6 +63,23 @@ el texto seguía listando X como opción, el auditor lo marcó igual como ambigu
 **lo más reciente le gana a la cláusula de prioridad**. Después de escribir las decisiones,
 recorré el resto del prompt y **eliminá o corregí cada frase que las contradiga**.
 
+**⚠️ Cuidado con el bucle de precedencia** (error real, detectado en una auditoría):
+si el mensaje 1 dice *"las decisiones mandan sobre el código"* pero los mensajes 2 y 3 dicen
+*"manda el código"*, **ganan estos últimos** (están después). Solución:
+- Escribí la precedencia como una **cadena de 3 niveles** explícita:
+  `1º decisiones > 2º código fuente > 3º prosa`.
+- **Repetí el recordatorio en CADA mensaje posterior**: *"'manda el código' vale frente a las
+  descripciones, nunca frente a las decisiones del mensaje 1"*.
+
+**⚠️ Ojo con las cláusulas absolutas que se te escapan.** En esa misma auditoría, un paréntesis
+inocente —*"(esta es la única modificación permitida al código)"*— **canceló 8 de las 13 decisiones**.
+Después de escribir, buscá tus propios "único", "nunca", "siempre", "tal cual" y verificá que no
+estén anulando algo que vos mismo pediste más arriba.
+
+**⚠️ Y el pulido final puede repintar lo que decidiste.** Un prompt de ajustes visuales que decía
+*"la rentabilidad va en verde o rojo"* anulaba una decisión previa de mostrar un guion en cierto
+caso — porque **se aplica último**. Revisá que el prompt de pulido no contradiga ninguna excepción.
+
 **Tres trampas del código heredado que hay que neutralizar explícitamente:**
 1. **Ramas de mock / feature flags**: código tipo `if (!apiHabilitada()) return datosFalsos`.
    Decí que en vibe siempre está habilitado y que **borre esas ramas** y no cree el módulo de mock.
