@@ -1,11 +1,17 @@
 {
   "name": "monday-vibe",
   "displayName": "Guía monday vibe",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Crea apps de monday con Claude Code: desarrollo local vibe-compatible, deploy seguro a Vercel y exportación a monday vibe con el mínimo de créditos.",
   "author": {
     "name": "The Automation Partner"
   },
   "repository": "https://github.com/theautomationpartner/guia-monday-vibe",
-  "keywords": ["monday", "vibe", "react", "vercel", "apps"]
+  "keywords": [
+    "monday",
+    "vibe",
+    "react",
+    "vercel",
+    "apps"
+  ]
 }
