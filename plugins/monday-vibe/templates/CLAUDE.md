@@ -202,6 +202,13 @@ Errores que ya costaron créditos/tiempo. Aplicarlos de entrada evita que Vibe (
 - **Columnas formula encadenadas:** vía API muchas veces vienen **vacías** aunque sus dependencias tengan valor. No confiar en ellas; recalcular en código a partir de los datos crudos.
 - **Prerequisito de datos:** los boards/columnas que la app lee tienen que **existir y estar conectados ANTES**. Si Vibe no encuentra un board (ej. un tarifario), cae a datos por defecto y enmascara el problema — parece que anda y no.
 - **Colores/labels de status y opciones de dropdown:** leerlos en vivo de `settings_str` de la columna, no hardcodear (así un cambio en monday no requiere tocar código).
+- **⚠️ `React.StrictMode` duplica los efectos en desarrollo.** Si escribís en monday desde un
+  `useEffect` (crear un ítem, registrar una deuda), **se ejecuta dos veces** y crea el registro
+  duplicado. Es un bug real que ya pasó en producción. Protegelo con un `useRef` de "ya lo hice", o
+  mejor: **escribí desde acciones del usuario (onClick), nunca desde un efecto de montaje.**
+- **Idempotencia de las escrituras:** guardá el id de todo lo que creaste (venta, recibo, deuda) y
+  **nunca lo vuelvas a crear**. Ojo: si ese id vive solo en el estado de React, un F5 lo pierde y se
+  duplica el registro. Para cosas contables, verificá contra monday antes de crear.
 
 ## Cómo trabajar conmigo (Claude Code) en este repo
 - **Planificar features grandes:** subagente `monday-vibe:vibe-planner` (no ensucia el contexto principal).

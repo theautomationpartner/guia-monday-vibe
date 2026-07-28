@@ -38,7 +38,7 @@ Esta hoja dice exactamente dónde vive y dónde **nunca** debe aparecer.
 
 | Dónde | Por qué está protegido |
 |---|---|
-| **El repo / GitHub** | `.gitignore` incluye `.env` y `.env.local` |
+| **El repo / GitHub** | `.gitignore` usa el patrón `.env*` con excepción `!.env.example` |
 | **El frontend / navegador** | El token **no** tiene prefijo `VITE_` → Vite no lo mete en el bundle |
 | **El chat con Claude / la IA** | Lo pegás vos en tu archivo o en Vercel, nunca en una conversación |
 | **El prompt de monday vibe** | En vibe la app usa auth **nativa** (sesión), no necesita token |
@@ -124,11 +124,12 @@ ningún lado; pasásela al cliente por un canal privado.
 ## Verificación rápida (antes de cada push)
 
 ```bash
-git status            # ¿aparece .env o .env.local? → NO debería
-git grep -i "eyJ"     # ¿hay algo que parezca un token? → debería dar vacío
+git ls-files -- "*.env*"      # solo debería aparecer .env.example
+git log -S eyJ --oneline -- src api   # ¿algún token en el historial? → vacío
 ```
+*(Evitá `| grep`: no existe en PowerShell. Y nunca pegues el valor encontrado en el chat.)*
 
-- [ ] `.gitignore` incluye `.env` y `.env.local`
+- [ ] `.gitignore` usa `.env*` (con `!.env.example`), no solo `.env`
 - [ ] El token no tiene prefijo `VITE_`
 - [ ] El token solo se usa dentro de `api/monday.js`
 - [ ] En Vercel está cargado como Environment Variable

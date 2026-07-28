@@ -9,7 +9,7 @@ te vas a trabar a mitad de camino.
 
 | Qué | Para qué | Cómo verificar |
 |---|---|---|
-| **Node.js 18+** | Correr la app (Vite) e instalar paquetes | `node --version` |
+| **Node.js 18, 20 o 22+** | Correr la app (Vite) e instalar paquetes | `node --version` ⚠️ las impares (19, 21) NO sirven |
 | **npm** | Instalar dependencias | `npm --version` |
 | **Git** | Versionar y subir a GitHub | `git --version` |
 | **VS Code + Claude Code** | Desarrollar | Ya lo tenés si leés esto |
