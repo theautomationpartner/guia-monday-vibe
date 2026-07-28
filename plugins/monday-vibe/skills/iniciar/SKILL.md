@@ -28,8 +28,10 @@ No abrumes. Si el usuario ya dio alguna en su mensaje, no la vuelvas a preguntar
 
 ## 2. Chequeo mínimo del entorno
 Verificá que exista Node (`node --version`). Si falla, indicá instalar Node LTS y parar.
-Si el usuario reporta el error de PowerShell "la ejecución de scripts está deshabilitada", indicá:
-`Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` (una vez, responder S).
+Si el usuario reporta el error de PowerShell "la ejecución de scripts está deshabilitada", indicale
+al **USUARIO** que corra en su PowerShell:
+`Set-ExecutionPolicy -Scope CurrentUser RemoteSigned -Force`
+⛔ No lo ejecutes vos: sin `-Force` pide confirmación y cuelga la sesión.
 
 ## 3. Decidí DÓNDE crear el proyecto (⚠️ nunca pises archivos)
 1. Mirá la carpeta actual. **Si ya tiene un `package.json`, un `src/` o cualquier proyecto**, NO
@@ -80,7 +82,7 @@ Además, en el `CLAUDE.md` del proyecto agregá al final una sección **"## Dato
 ✅ Proyecto listo: <nombre>  (tipo: <variant>, idioma: <es/en>)
 
 Próximos pasos:
-1. npm run dev            → ver la app (arranca en modo mock)
+1. Corré VOS en tu terminal: npm run dev   → ver la app (arranca en modo mock)
 2. Contame qué tiene que hacer la app y la construimos
 3. /monday-vibe:publicar  → subirla a GitHub + Vercel para que el cliente la pruebe
 4. /monday-vibe:exportar  → generar lo que se pega en monday vibe

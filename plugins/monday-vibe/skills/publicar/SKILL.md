@@ -8,115 +8,216 @@ description: Sube la app a GitHub y la despliega en Vercel con deploy automátic
 Objetivo: dejar la app **online y funcionando con datos reales**, para que el cliente la use y dé el
 OK **antes** de gastar créditos en monday vibe.
 
-⚠️ **Regla de oro:** el token de monday **nunca** se sube al repo. Va como variable de entorno en
-Vercel y lo usa solo la función `api/monday.js`.
+---
+
+## ⛔ REGLAS DURAS (leer antes de ejecutar nada)
+
+**1. NUNCA ejecutes vos estos comandos — bloquean esperando que alguien escriba y cuelgan la sesión:**
+`gh auth login` · `vercel login` · `vercel link` (sin `--yes`) · `vercel env add` · `npm run dev`
+👉 Cuando haga falta uno, **mostráselo al usuario para que lo corra en SU terminal** y esperá su
+confirmación antes de seguir.
+
+**2. NUNCA pongas un secreto en la línea de comandos.** Está prohibido resolver un `vercel env add`
+que se cuelga con algo tipo `echo $TOKEN | vercel env add ...`: eso escribe el token en el historial
+del shell y en la transcripción del chat. El token lo carga **el usuario**, siempre.
+
+**3. Nunca leas ni imprimas `.env.local`.** Al buscar secretos, reportá **solo archivo y línea**,
+jamás el valor.
+
+**4. Verificá ANTES de publicar, no después.** Una vez que algo se subió a GitHub, ya está afuera.
 
 ---
 
 ## Paso 0 — Chequeo previo (BLOQUEANTE)
-Antes de tocar nada:
-1. ¿Existe `.gitignore` con `.env` y `.env.local`? Si no → **crealo/completalo ahora**.
-2. ¿Hay algún `.env*` a punto de subirse? (`git status`) → sacalo del staging.
-3. Buscá tokens en el código (patrón `eyJ`) → si hay uno hardcodeado, moverlo a variable de entorno
-   **antes** de continuar.
-4. ¿Existe `api/monday.js`? Si no, la app no va a poder leer monday desde Vercel (copiá el template).
 
-Si algo de esto falla, **parar y arreglar**. No publiques con un token expuesto.
+### 0.1 ¿El proyecto compila?
+```
+npm install
+npm run build
+```
+Ambos terminan (a diferencia de `npm run dev`). **No despliegues algo que no compila.**
 
-## Paso 1 — Herramientas
-Verificá y, si falta, guiá la instalación:
-| Herramienta | Chequeo | Si falta |
-|---|---|---|
-| git | `git --version` | git-scm.com |
-| GitHub CLI | `gh --version` | `winget install GitHub.cli` (o cli.github.com) |
-| Vercel CLI | `vercel --version` | `npm install -g vercel` |
+### 0.2 ¿Está el `.gitignore` bien?
+Tiene que incluir, como mínimo: `.env*` (con el asterisco, no solo `.env`), `node_modules/`,
+`dist/` y `.vercel/`. Si falta alguno, agregalo ahora.
 
-> En Windows: usá `npm install -g`, **no** `npx` cada vez (npx re-descarga y da timeouts/EPERM).
+### 0.3 ¿Hay secretos en el código?
+Buscá el patrón `eyJ` **acotado a `src/` y `api/`** (nunca sobre todo el repo: barre `node_modules`
+y escupe basura). Reportá archivo y línea, sin el valor.
 
-**Logins (una sola vez por máquina, abren el navegador):**
-- `gh auth login`
-- `vercel login`
+⚠️ Si encontrás un token hardcodeado, o una variable con prefijo `VITE_*TOKEN*`: moverlo **no
+alcanza**. Ese token ya viajó en un bundle o en el historial → **hay que rotarlo en monday**
+(perfil → Developers → API token → regenerar). Decíselo explícitamente al usuario.
 
-Avisale al usuario que estos dos pasos son interactivos y que los tiene que completar él.
+### 0.4 ¿Existe el proxy?
+Confirmá que existe `api/monday.js`. Sin eso la app no puede leer monday desde Vercel.
 
-## Paso 2 — Repo en GitHub (privado)
+---
+
+## Paso 1 — Herramientas y sesiones (chequear, no loguear)
+
+Corré **solo estos** (todos terminan y no piden nada):
+```
+git --version
+gh --version
+vercel --version
+gh auth status
+vercel whoami
+```
+
+Según lo que falte, **pedile al usuario que corra en SU terminal**:
+| Falta | Que corra el usuario |
+|---|---|
+| git | instalar de git-scm.com |
+| gh | `winget install GitHub.cli` |
+| vercel | `npm install -g vercel` |
+| sesión de GitHub | `gh auth login` (elegir **HTTPS**) |
+| sesión de Vercel | `vercel login` |
+
+> En Windows, después de instalar algo hay que **cerrar y abrir VS Code** para que la terminal lo vea.
+
+También verificá la identidad de git (si falta, `git commit` falla con un error confuso):
+```
+git config user.name
+git config user.email
+```
+Si están vacías, pedile al usuario los valores y configuralos **solo para este repo** (sin `--global`).
+
+---
+
+## Paso 2 — Repo local y verificación de secretos (el orden importa)
+
+### 2.1 ¿Ya está publicado?
+```
+git rev-parse --is-inside-work-tree
+git remote get-url origin
+```
+Si **ya hay un remoto**, saltá al Paso 5 (solo commit + push): el proyecto ya está publicado.
+
+### 2.2 Inicializar y preparar el commit
 ```
 git init
 git add .
+```
+
+### 2.3 🔒 VERIFICAR ANTES DE CREAR NADA REMOTO
+```
+git status --porcelain
+git ls-files -- "*.env*"
+```
+De `git ls-files` **solo puede aparecer `.env.example`**.
+
+⛔ Si aparece cualquier otro `.env`: **PARÁ**. Sacalo del control de versiones
+(`git rm --cached <archivo>`), verificá el `.gitignore`, y avisale al usuario que **rote el token
+en monday** por las dudas. No sigas hasta que la lista quede limpia.
+
+### 2.4 Commit
+```
 git commit -m "Primera versión de la app"
-gh repo create <nombre-app> --private --source=. --push
 ```
-Después del commit, **verificá** que no se haya subido ningún `.env`:
-```
-git ls-files | grep -i env
-```
-Solo debería aparecer `.env.example` (que no tiene secretos).
 
-## Paso 3 — Conectar Vercel
-```
-vercel link
-```
-Seguí el asistente (crear proyecto nuevo). Vercel detecta Vite solo.
+---
 
-## Paso 4 — Cargar el token (el paso clave)
+## Paso 3 — Crear el repo en GitHub (privado, sin push automático)
+
+```
+gh repo create <nombre-del-proyecto> --private --source=.
+```
+`<nombre-del-proyecto>` = el nombre de la carpeta o el de `package.json`. **Confirmalo con el
+usuario** antes de crearlo.
+
+> ⚠️ **No uses `--push` acá.** Primero se verifica, después se sube.
+
+### 3.1 Última verificación y recién ahí, push
+Repetí `git ls-files -- "*.env*"`. Si sigue limpio:
+```
+git push -u origin HEAD
+```
+
+---
+
+## Paso 4 — Conectar Vercel
+
+```
+vercel link --yes
+vercel git connect --yes
+```
+`vercel git connect` vincula el repo: a partir de ahí **cada push despliega solo**.
+Si alguno falla o pide algo interactivo, **pasáselo al usuario** o indicá hacerlo desde el dashboard
+(Project → Settings → Git).
+
+### 4.1 Cargar el token — ⛔ ESTE PASO LO HACE EL USUARIO
+Pedile que corra en SU terminal:
 ```
 vercel env add MONDAY_TOKEN production
 ```
-La CLI le pide el token al usuario y lo guarda **encriptado en Vercel**. Repetir para `preview` si
-quiere que las ramas también funcionen.
+La CLI le va a pedir el token; lo pega ahí. **Vos no ejecutes este comando ni le pidas el token por
+chat.** Repetir para `preview` si quiere que las ramas también funcionen.
 
-⚠️ **Nunca** pidas el token en el chat ni lo escribas en un archivo del repo. Que lo pegue en la CLI.
+Recordale además que **`VITE_MONDAY_MOCK` no debe estar en 1 en Vercel** (si está, la app muestra
+datos de ejemplo).
 
-Si además quiere datos reales en `preview`/producción, recordá que el flag `VITE_MONDAY_MOCK` **no**
-debe estar en 1 en Vercel (si está, la app muestra datos de ejemplo).
+---
 
-## Paso 5 — Desplegar y conectar el auto-deploy
+## Paso 5 — Desplegar
+
+⚠️ `vercel --prod` despliega **lo que hay en la carpeta local**, no lo que está en GitHub.
+Asegurate de haber commiteado y pusheado todo antes, o el cliente prueba código que no está en el repo.
+
 ```
-vercel git connect
+git status --porcelain      # tiene que estar vacío
 vercel --prod
 ```
-`vercel git connect` vincula el proyecto al repo de GitHub: a partir de ahí **cada `git push`
-despliega solo**. Si el comando falla, se puede conectar desde el dashboard (Project → Settings →
-Git).
 
-### 5b. Protegé la URL (staging con datos reales del cliente)
-El proxy `/api/monday` queda accesible en internet. Recomendá al usuario UNA de estas:
-- **Deployment Protection** en Vercel (Settings → Deployment Protection) — la más simple.
-- O setear `APP_PROXY_KEY` en Vercel (el template del proxy ya la soporta vía header `x-app-key`).
-Y siempre: URL compartida solo por canal privado con el cliente.
+### 5.1 Proteger la URL (staging con datos reales de un cliente)
+El endpoint `/api/monday` queda accesible en internet. Recomendá **una** de estas:
+- **Deployment Protection** de Vercel (Settings → Deployment Protection) — la más simple y la
+  recomendada.
+- O la guardia por clave, que necesita **DOS variables** en Vercel y un redeploy:
+  `APP_PROXY_KEY` (servidor) **y** `VITE_APP_PROXY_KEY` con el mismo valor (se inlinea en el bundle
+  al compilar). ⚠️ Si cargás solo la primera, **todas las llamadas devuelven 401 y la app deja de
+  funcionar**. Y ojo: `VITE_APP_PROXY_KEY` viaja en el bundle público — frena bots, no es control de
+  acceso real.
 
-## Paso 6 — Probar de verdad
-Abrí la URL que devolvió Vercel y verificá:
-- [ ] Carga sin errores.
-- [ ] Trae **datos reales** de monday (no el mock).
-- [ ] Los flujos principales funcionan (crear/editar/filtrar lo que corresponda).
-- [ ] Estados vacío / error se ven bien.
+---
 
-### 6b. Probar el TAMAÑO real (no alcanza con pantalla completa)
-⚠️ La app va a vivir **dentro de un iframe de monday**, con mucho menos espacio que una ventana
-completa. Probar solo a pantalla completa da una falsa sensación de que está bien.
+## Paso 6 — ⛔ Verificación: ESTO LO HACE EL USUARIO
 
-Abrí **DevTools → modo responsive** y verificá en anchos chicos (orientativo: ~400px como un item
-view, ~800px como un widget, y un ancho grande):
-- [ ] **No aparece scroll horizontal de página** (las tablas anchas scrollean dentro de su caja).
-- [ ] Nada se corta ni se superpone; los textos no se desbordan.
-- [ ] Las grillas colapsan bien (de 3-4 columnas a 1 en angosto).
-- [ ] Se ve bien en **tema claro y oscuro** (monday tiene light / dark / black).
+**Vos no tenés navegador. Nunca marques estos ítems como ✅ por tu cuenta.**
+Pasale la URL y esta checklist, y **esperá su respuesta**:
+
+```
+Probá la app en la URL de Vercel y confirmame:
+[ ] Carga sin errores
+[ ] Trae datos REALES de monday (no los de ejemplo)
+[ ] Los flujos principales andan (crear/editar/filtrar)
+[ ] Los estados de vacío y error se ven bien
+
+Y con las DevTools en modo responsive (achicá la ventana a ~400px y ~800px):
+[ ] No aparece scroll horizontal de la página
+[ ] Nada se corta ni se superpone
+[ ] Las tablas anchas scrollean dentro de su caja
+[ ] Se ve bien en tema claro y en tema oscuro
+```
+
+---
 
 ## Paso 7 — Entregar al cliente
-Pasale la URL y pedile que la use. **Recién con su OK** se pasa a monday vibe
-(`/monday-vibe:exportar`). Todo lo que se descubra acá es gratis; descubrirlo dentro de vibe cuesta
+Pasale la URL (por canal privado, no la publiques). **Recién con su OK** se pasa a monday vibe con
+`/monday-vibe:exportar`. Todo lo que se descubra acá es gratis; descubrirlo dentro de vibe cuesta
 créditos.
 
 ---
 
 ## Si algo falla
-| Error | Causa típica | Arreglo |
+| Error | Causa | Solución |
 |---|---|---|
-| La app carga pero sin datos | Falta `MONDAY_TOKEN` en Vercel, o `VITE_MONDAY_MOCK=1` | Cargar la env var / sacar el flag y redeploy |
-| `500` en `/api/monday` | Token inválido o sin permisos sobre esos boards | Revisar el token y sus permisos |
-| Datos vacíos pero sin error | Board o column IDs equivocados | Verificar los IDs reales |
-| `gh`/`vercel` no reconocidos | No instalados o falta reabrir la terminal | Instalar y abrir una terminal nueva |
+| La app carga pero sin datos | Falta `MONDAY_TOKEN` en Vercel, o `VITE_MONDAY_MOCK=1` | Cargar la env var / sacar el flag y redesplegar |
+| **401 en `/api/monday`** | Se cargó `APP_PROXY_KEY` pero no `VITE_APP_PROXY_KEY` | Cargar las dos con el mismo valor y redesplegar |
+| `500` en `/api/monday` | Token inválido o sin permisos | Revisar el token y sus permisos |
+| Datos vacíos sin error | Board o column IDs equivocados | Verificar los IDs reales |
+| `gh`/`vercel` "no se reconoce" | Recién instalados | Cerrar y abrir VS Code |
+| `Please tell me who you are` | Falta identidad de git | `git config user.name` / `user.email` |
 
 ## Al terminar, recordá
 - 🔒 Cuando la app pase a monday vibe (auth nativa, sin token), **rotá/revocá** el token de Vercel.

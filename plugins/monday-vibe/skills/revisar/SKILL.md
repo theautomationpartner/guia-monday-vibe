@@ -11,20 +11,31 @@ exactamente cómo arreglarlo**. No dejes al usuario adivinando.
 ## A. Herramientas de la máquina
 | Chequeo | Comando | Si falla |
 |---|---|---|
-| Node 18+ | `node --version` | Instalar Node LTS desde nodejs.org |
+| Node 18, 20 o 22+ | `node --version` | Instalar Node LTS desde nodejs.org. ⚠️ Las versiones impares (19, 21) NO sirven: Vite las rechaza |
 | npm | `npm --version` | Viene con Node |
 | git | `git --version` | Instalar desde git-scm.com |
 
-**Windows:** si algún comando falla con *"la ejecución de scripts está deshabilitada"*, la solución es
-`Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` (una vez, responder S).
+**Windows:** si algún comando falla con *"la ejecución de scripts está deshabilitada"*, indicale al
+**USUARIO** que corra en su PowerShell: `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned -Force`.
+⛔ No lo ejecutes vos: sin `-Force` pide confirmación y cuelga la sesión, y además cambia una política
+de la máquina.
+
+Si el usuario va a usar `/monday-vibe:publicar`, chequeá también (todos terminan):
+`gh --version` · `vercel --version` · `gh auth status` · `vercel whoami`.
+Y que el proyecto compile: que exista `node_modules` y que `npm run build` pase.
+⛔ Nunca corras `npm run dev`: no termina.
 
 ## B. Seguridad del token (BLOQUEANTE — lo más importante)
 1. ¿Existe `.gitignore` y contiene `.env.local` y `.env`? → si no, agregalo YA.
-2. ¿Hay algún `.env*` trackeado por git? (`git status`, `git ls-files | grep env`) → si sí, **sacalo**
-   del control de versiones y **rotá el token**.
-3. Buscá tokens filtrados en el código y en el historial: patrón `eyJ` (los tokens de monday son JWT).
-   Si aparece uno commiteado: avisá que **hay que rotar el token en monday** (borrarlo del archivo no
-   alcanza, queda en el historial).
+2. Primero confirmá que hay repo: `git rev-parse --is-inside-work-tree`. Si no lo hay, saltá este
+   punto (no es un error: el proyecto todavía no se versionó).
+   Si lo hay: `git ls-files -- "*.env*"` (evitá `| grep`: no existe en PowerShell). Solo puede
+   aparecer `.env.example`. Si hay otro, **sacalo** del control de versiones y **rotá el token**.
+3. Buscá tokens filtrados con el patrón `eyJ`, **acotado a `src/` y `api/`** (nunca sobre todo el
+   repo: barre `node_modules`). En el historial: `git log -S eyJ --oneline -- src api`.
+   ⛔ Reportá **solo archivo y línea, nunca el valor**. No leas ni imprimas `.env.local`.
+   Si aparece uno commiteado: **hay que rotar el token en monday** (borrarlo del archivo no alcanza,
+   queda en el historial).
 4. ¿Alguna variable de token tiene prefijo `VITE_`? → ❌ **grave**. Buscá específicamente
    `import.meta.env.VITE_*TOKEN*` en `src/`. Aunque esté pensado "solo para dev", **Vite inlinea ese
    valor en el bundle al compilar**: si la variable existe en el entorno de build (o alguien la carga
@@ -50,7 +61,7 @@ exactamente cómo arreglarlo**. No dejes al usuario adivinando.
 > componentes que ya se borraron (o no mencionar los que se agregaron). Todo hallazgo de este
 > reporte tiene que salir de archivos reales, no de documentación.
 
-Revisá el CSS/JSX buscando problemas de tamaño:
+Revisá el CSS/JSX **acotando la búsqueda a `src/`** (si no, barrés `node_modules` y `dist`):
 - ⚠️ **Anchos o altos fijos en px** para el layout (`width: 1200px`, `height: 800px`) → tiene que ser fluido.
 - ⚠️ **Colores hardcodeados** (`#fff`, `#323338`) en fondos/textos → se rompe en tema oscuro.
   Deberían salir de los tokens de Vibe.

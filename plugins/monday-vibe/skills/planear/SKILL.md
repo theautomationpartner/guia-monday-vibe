@@ -11,9 +11,12 @@ deja un **blueprint** claro antes de escribir una línea.
 ## Cómo trabajar
 1. Si el usuario todavía no describió bien la app, hacé **2-3 preguntas puntuales** (qué problema
    resuelve, quién la usa, qué datos toca). No más.
-2. Delegá el análisis al subagente **`vibe-planner`** (corre en su propio contexto y devuelve el
-   blueprint limpio). Pasale: la descripción, el tipo de app, el idioma de la UI y —si existe— la
-   tabla de boards/columnas con IDs reales del `CLAUDE.md`.
+2. Delegá el análisis al subagente **`monday-vibe:vibe-planner`** (ese es el `subagent_type` exacto:
+   lleva el prefijo del plugin, sin él la delegación falla). Corre en su propio contexto y devuelve
+   el blueprint limpio. Pasale: la descripción, el tipo de app, **el idioma de la UI** y —si existe—
+   la tabla de boards/columnas con IDs reales del `CLAUDE.md`.
+   Si todavía no hay `CLAUDE.md` (planear antes de `/iniciar`), decíselo y pedile que marque el
+   modelo de datos como BLOQUEANTE hasta conseguir los IDs.
 3. Presentá el blueprint al usuario y **pedile confirmación** antes de construir.
 
 ## El blueprint tiene que incluir
@@ -33,4 +36,10 @@ deja un **blueprint** claro antes de escribir una línea.
 - No escribas código en este paso. Solo el plan.
 
 ## Al terminar
-Guardá el blueprint en `PLAN.md` en la raíz del proyecto y ofrecé empezar por el primer paso.
+Guardá el blueprint en `PLAN.md`.
+- Si `PLAN.md` **ya existe**, preguntá antes de pisarlo (o guardá como `PLAN-2.md`): puede tener
+  ediciones a mano del usuario.
+- Si todavía **no hay carpeta de proyecto** (estás planeando antes de `/iniciar`), preguntá dónde
+  guardarlo. No lo escribas a ciegas en el directorio actual.
+
+Después ofrecé empezar por el primer paso del plan.
