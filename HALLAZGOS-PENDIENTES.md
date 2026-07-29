@@ -474,3 +474,91 @@ Eso es mérito directo de:
 
 **La prueba ciega no valida el prompt: valida la app.** Es la parte más barata del proceso y la
 que más plata salva. Ahora es una condición de entrega, no una sugerencia.
+
+---
+
+# JORNADA 3 — revisar las dos apps que el equipo ya habia hecho en vibe
+
+Se leyeron las transcripciones completas de **Workload** (dashboard) y **Dedication** (item view),
+las dos de la cuenta Sonivie, hechas ANTES de que existiera el kit.
+Con eso pasamos de 1 caso medido a **3**, hechos por dos personas distintas.
+
+## 20. 🔴 El 82% del gasto es corregir — y ahora está medido tres veces
+
+| App | Tipo | Build | Correcciones | Total | % |
+|---|---|---|---|---|---|
+| Workload | dashboard, solo lectura | 46 | 191 | 237 | 81% |
+| Dedication | item view, lee y escribe | 41 | 187 | 228 | 82% |
+| Private Comments History | item view, solo lectura | 33 | 180 | 213 | 85% |
+| | | **120** | **558** | **678** | **82%** |
+
+No era mala suerte de un caso. **Construir cuesta el 18%.**
+Y en las tres, la lógica de negocio salió bien de entrada: lo que se pagó fue envoltura.
+
+## 21. 🔴 LA PALANCA MÁS GRANDE: un prompt cuesta igual arregle 1 cosa o 9
+
+Medido en Dedication:
+
+| Prompt | Cambios | Costó | Por cambio |
+|---|---|---|---|
+| "el dropdown está vacío" | 1 | 31 | **31** |
+| "usá monday.api" | 1 | 31 | **31** |
+| "borrá los 0% al guardar" | 1 | 30 | **30** |
+| 6 arreglos de UX juntos | 6 | 53 | **8,8** |
+| 9 mejoras juntas | 9 | 42 | **4,7** |
+
+En Private Comments History mandamos **8 correcciones sueltas = 180 créditos**.
+Agrupadas habrían costado ~90. **Media app se pagó por mandar de a uno.**
+
+**Parche:** regla 7 en `/exportar` — anotá los problemas y mandá UNA tanda numerada.
+Lo visual se agrupa tranquilo; la lógica va aparte para poder revertirla sola.
+
+## 22. "CERO PROSA SOBRE APIs" confirmado en un caso independiente
+
+Workload pegó la consulta GraphQL entera, perfecta… **pero nunca la respuesta**. Vibe asumió que
+`column_values(ids:["una"])` devuelve un objeto. Devuelve un **array, siempre**. App vacía, 14 créditos.
+
+Es el mismo error que el `.data` del contexto, en otra app y otra persona.
+👉 **Pegar la consulta no alcanza: hay que pegar una respuesta real de esa consulta.**
+
+## 23. Lo que decís en un prompt NO se hereda al siguiente
+
+Workload tenía al pie una sección **"COMMON PITFALLS"** con `window.mondaySdk.api()` como trampa nº1.
+**Esa app no cometió el error.** Dedication se escribió sin esa sección → lo cometió: 31 créditos,
+más otros 31 antes persiguiendo el síntoma equivocado ("el dropdown está vacío", cuando en realidad
+no cargaba nada).
+
+**Parche:** el bloque de trampas se vuelve a pegar en CADA prompt de CADA app. Es texto, es gratis.
+
+## 24. "Diagnosticar, no razonar" confirmado — 31 créditos en una hipótesis equivocada
+
+El síntoma era "el dropdown de personas está vacío". Se mandó un prompt para poblar el dropdown:
+31 créditos, no lo arregló. La causa real era que **ninguna** llamada funcionaba
+(`window.mondaySdk` undefined). Un build de diagnóstico cuesta ~25 y lo mostraba de una.
+
+## 25. La paginación en prosa se ignora
+
+El prompt de Workload decía textual *"items_page returns at most 500; keep fetching until cursor is
+null"*. Vibe escribió `limit:500` sin bucle igual. Hubo que corregirlo después.
+Tercera aparición del mismo bug (en otra app un `limit:200` dejó 9 de 209 entradas invisibles).
+
+**Parche:** la paginación no se pide, **se pega la función entera**; y se busca cada `limit:` a mano
+antes de entregar.
+
+## 26. Gotchas de la API que faltaban en el kit
+
+- `column_values` devuelve **array** aunque pidas una sola columna.
+- En una conexión de doble vía solo se escribe **el lado primario**; escribir el espejo
+  **no da error, no hace nada**.
+- La conexión **no se puede setear dentro de `create_item`** de forma confiable: creá y después conectá.
+- Las columnas **mirror/lookup** son de solo lectura y su `text` no es confiable — leé el ítem original.
+
+## 27. El layout en grillas se arregla estructuralmente, no con retoques
+
+Workload gastó ~156 créditos en densidad y alineación del Gantt. Las barras no coincidían con las
+columnas porque **el header y las filas usaban anchos distintos**. Los retoques de ancho no lo
+arreglaron; lo arregló pasar header y filas a **una sola grilla CSS compartida**.
+
+**A revisar:**
+- [ ] ¿Debería `/exportar` exigir que toda tabla/timeline se pida con `grid-template-columns`
+      compartido entre header y filas, desde el primer prompt?

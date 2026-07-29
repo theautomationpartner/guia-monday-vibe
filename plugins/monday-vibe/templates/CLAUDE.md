@@ -282,11 +282,26 @@ Errores que ya costaron créditos/tiempo. Aplicarlos de entrada evita que Vibe (
   en **`.jsx`/`.js` (no TypeScript)**.
 - **Columnas checkbox (boolean):** se escriben con `change_column_value` + JSON `{"checked":"true"}`. `change_simple_column_value` las **rechaza** con error explícito.
 - **Columnas file:** subir = mutation `add_file_to_column` por **multipart/form-data** contra `/v2/file` (no `/v2`). Vaciar = `update_assets_on_item(files: [])`. `change_simple_column_value` no sirve para files.
+- **`column_values` SIEMPRE devuelve un array**, aunque pidas una sola columna por id. Costó una app
+  entera cargando vacía:
+  ```js
+  // pedido: p: column_values(ids:["board_relation_xxx"]) { ... on BoardRelationValue { linked_item_ids } }
+  item.p.linked_item_ids      // ❌ undefined, sin error
+  item.p?.[0]?.linked_item_ids ?? []   // ✅
+  ```
 - **Columnas board_relation (conectadas):** `text` viene **siempre `null`**. Hay que pedir `... on BoardRelationValue { display_value }` (o `linked_item_ids` si querés filtrar por ítem). Escribir = `change_column_value` con `{"item_ids":[<id>]}`.
   - **No se pueden CREAR por API** (`InvalidColumnTypeException`): hay que agregarlas a mano desde
     la interfaz (*+ Add column → Connect boards*). Planificalo, porque bloquea el desarrollo.
   - Dejala **de una sola vía** salvo que de verdad necesites navegar al revés: la doble vía agrega
     una columna al board del cliente sin aportar nada.
+  - Si la conexión es **de doble vía**, solo se escribe **el lado primario**. Escribir el lado espejo
+    (el que monday creó solo en el otro board) **no da error: no hace nada**. Documentá cuál de los
+    dos es el bueno, con su column_id, antes de codear.
+  - **No la setees dentro de `create_item`**: no se aplica de forma confiable. Creá el ítem primero
+    y seteá la conexión en una segunda llamada.
+- **Columnas mirror / lookup:** son de **solo lectura** y el formato de su `text` no es confiable.
+  Nunca las uses para lógica: leé el dato del ítem original. (Una app usó el mirror de un Timeline
+  para calcular fechas y las barras quedaron corridas.)
 - **Automatizaciones que crean ítems en otro board** (el patrón para capturar cambios de columna).
   Verificado configurándolas en producción:
   - El valor NUEVO de la columna es el token **`Current value`**. Al lado está `Previous value`, que

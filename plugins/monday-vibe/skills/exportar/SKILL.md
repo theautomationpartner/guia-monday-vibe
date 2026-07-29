@@ -79,6 +79,42 @@ O sea: `res.itemId` es undefined; el bueno es `res.data.itemId`.
 Vale para: la forma del contexto, la forma de las respuestas GraphQL, los valores de un enum, el
 formato de una fecha. **Todo lo que sea "la API devuelve X" se verifica antes de escribirlo.**
 
+**Segundo caso, otra app, otra persona, mismo error.** Un prompt pegaba la consulta GraphQL entera
+—perfecta, con alias y todo— pero nunca mostró **la respuesta**. Vibe asumió que
+`column_values(ids:["una_sola"])` devuelve un objeto. Devuelve un **array**, siempre, aunque pidas
+una sola columna. Toda la app cargó vacía. 14 créditos.
+
+```
+Ojo: column_values SIEMPRE devuelve un array, aunque pidas una sola columna.
+La respuesta real es:
+
+  { "id": "123", "p": [ { "linked_item_ids": ["456"] } ] }
+
+O sea: item.p.linked_item_ids es undefined; el bueno es item.p[0].linked_item_ids.
+```
+
+👉 **Pegar la consulta no alcanza. Hay que pegar también una respuesta real de esa consulta.**
+
+### ⚠️ Lo que decís en un prompt NO se hereda al siguiente
+Ese mismo equipo había escrito una sección **"COMMON PITFALLS"** al pie del prompt de su primera
+app, con `window.mondaySdk.api()` como trampa nº 1. Esa app **no cometió el error**.
+La segunda app se escribió sin esa sección → **vibe usó `window.mondaySdk.api()`, que es
+undefined, y la app entera cargó vacía. 31 créditos.** Y otros 31 antes, persiguiendo el síntoma
+equivocado.
+
+**La regla:** el bloque de trampas conocidas se **vuelve a pegar en cada prompt de cada app**.
+Es texto, es gratis. No asumas que vibe "ya lo sabe" porque se lo dijiste en otra app, ni en otro
+mensaje de la misma app.
+
+### ⚠️ La paginación en prosa se ignora — va como código
+Un prompt decía, en inglés y bien claro: *"items_page returns at most 500 items; if `cursor` is not
+null, keep fetching until it is null"*. **Vibe lo ignoró** y escribió `items_page(limit:500)` sin
+bucle. Hubo que corregirlo después.
+
+Es la tercera vez que el mismo bug aparece en apps distintas (un `limit: 200` en otra dejó 9 de 209
+entradas invisibles en producción, en silencio). **La paginación no se pide: se pega la función que
+pagina, entera.** Y en el checklist previo a entregar, se busca a mano cada `limit:` del prompt.
+
 ### Al pegar código de una app más grande: acotá el alcance explícitamente
 Si el código trae features que NO van a esta app (otros flujos, tipos de más, funciones
 duplicadas), agregá arriba una sección **"DECISIONES YA TOMADAS"** que:
@@ -399,19 +435,19 @@ Regla: el dev tiene que poder sacar cada captura **sin preguntarte nada**.
 
 ## 🔴 EL CICLO DE CORRECCIÓN — acá se va la plata de verdad
 
-**Dato medido en un export real, con un prompt que había pasado 3 rondas de prueba ciega:**
+**Medido sobre TRES apps reales, de dos personas distintas, en la misma cuenta:**
 
-```
- 33 créditos   el build inicial — la app completa, funcionando
-180 créditos   las 8 correcciones que vinieron después
-────
-213 total      el 85% se fue en corregir, no en construir
-```
+| App | Tipo | Build inicial | Correcciones | Total | % en corregir |
+|---|---|---|---|---|---|
+| Workload | dashboard, solo lectura | 46 | 191 (5 prompts) | **237** | 81% |
+| Dedication | item view, lee y escribe | 41 | 187 (5 prompts) | **228** | 82% |
+| Private Comments History | item view, solo lectura | 33 | 180 (8 prompts) | **213** | 85% |
+| | | **120** | **558** | **678** | **82%** |
 
-La buena noticia: **la lógica de datos salió perfecta a la primera y no se tocó ni una vez.**
-Paginación, husos horarios, permisos, orden. Todo lo caro de arreglar, bien.
-Los 180 se fueron en **envoltura**: un estado inicial, unas clases de CSS, un `.data` faltante,
-y —lo peor— **57 créditos en borrar UNA línea de CSS cosmética**.
+No es un caso raro ni mala suerte: **construir cuesta el 18%.** Todo lo demás es corregir.
+
+Y en las tres, **la lógica de negocio salió bien de entrada**. Lo que se pagó fue envoltura:
+un `.data` faltante, un array mal leído, un SDK mal importado, alineación de columnas, CSS.
 
 Estas reglas salen de ahí. Se aplican DESPUÉS del primer build.
 
@@ -498,10 +534,47 @@ tipo *"My board"*, gente que no existe en la cuenta). Una item view ahí adentro
 👉 Para validar una item view hay que **publicar** (publicar no gasta créditos) y abrirla desde un
 ítem real. Sin saber esto, se gastan builds "arreglando" algo que no está roto.
 
+### 7. 🔴 AGRUPÁ LAS CORRECCIONES — el ahorro más grande de todos
+
+**Un prompt de corrección cuesta casi lo mismo arregle 1 cosa o arregle 9.** Medido:
+
+| Prompt de corrección | Cuántos cambios pedía | Costó | Por cambio |
+|---|---|---|---|
+| "el dropdown está vacío" | 1 | 31 | **31** |
+| "usá `monday.api` en vez de `window.mondaySdk`" | 1 | 31 | **31** |
+| "borrá los owners en 0% al guardar" | 1 | 30 | **30** |
+| 6 arreglos de UX juntos | 6 | 53 | **8,8** |
+| **9 mejoras juntas** (paralelizar, reload, dirty state, sin cap de 5, combobox…) | **9** | **42** | **4,7** |
+
+Es el mismo principio que ya vale para construir —**el detalle es gratis, los builds son caros**—
+pero corrigiendo se olvida, porque cada bug aparece de a uno y da ansiedad mandarlo solo.
+
+**La regla:**
+> Cuando encuentres un problema, **anotalo y seguí probando.** Recién cuando terminaste de recorrer
+> toda la app, mandás UN prompt con todo junto, numerado.
+
+En Private Comments History se mandaron **8 correcciones sueltas = 180 créditos**. Agrupadas en dos
+tandas habrían costado alrededor de 90. **La mitad de la app se pagó por mandar de a uno.**
+
+Formato del prompt agrupado (mantiene el estilo imperativo de la regla 1):
+
+```
+Aplicá TODOS estos cambios. Mantené el resto exactamente igual.
+
+1) <qué> — De: <lo que dice hoy>  A: <lo que tiene que decir>
+2) <qué> — De: ...  A: ...
+...
+No cambies el modelo de datos, ni los board ids, ni los column ids.
+```
+
+⚠️ El contrapeso: si el build sale mal no sabés cuál de los 9 lo rompió. Por eso **no mezcles la
+lógica de datos con lo visual** en la misma tanda — lo visual es seguro de agrupar, la lógica va
+aparte para poder revertirla sola.
+
 ## Verificar cada build (no confiar en el "✅")
 Después de CADA prompt: abrí la app real y probá esa pantalla. Para features con datos, confirmá que
-lea del **board real**, no de datos por defecto. Si falta algo, corregí con un prompt **puntual**
-(modelo barato), no regeneres todo.
+lea del **board real**, no de datos por defecto. Si falta algo, **anotalo y seguí probando**: se
+corrige todo junto (regla 7), con **Sonnet** (regla 2), sin regenerar la app entera.
 
 **Truco oficial de monday:** en modo **Discuss** (barato, no ejecuta código) **pedile a vibe que te
 explique qué construyó**. Es la forma más rápida de detectar que "dijo que sí" pero dejó algo
