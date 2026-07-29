@@ -54,8 +54,10 @@ Copiá los archivos de `${CLAUDE_PLUGIN_ROOT}/templates/` a la carpeta del proye
 | `index.html` | `index.html` | Reemplazá `APP_NAME` y `LANG_CODE` (`es`/`en`) |
 | `main.jsx` | `src/main.jsx` | Importa los tokens de Vibe |
 | `App.jsx` | `src/App.jsx` | Reemplazá `APP_NAME` |
-| `lib-monday.js` | `src/lib/monday.js` | Acceso a monday (3 modos) |
+| `App.css` | `src/App.css` | Fondo/texto por tokens: sin esto, en oscuro queda un marco blanco |
+| `lib-monday.js` | `src/lib/monday.js` | Acceso a monday (3 modos) + tema + simulación de context |
 | `api-monday.js` | `api/monday.js` | Proxy serverless (acá vive el token) |
+| `verificar-render.mjs` | `verificar-render.mjs` | Chequea que la app **dibuje**, no solo que compile |
 | `gitignore.txt` | `.gitignore` | **Crítico**: evita subir el token |
 | `env.example` | `.env.example` | Y copialo también como `.env.local` |
 
@@ -63,7 +65,7 @@ Además, en el `CLAUDE.md` del proyecto agregá al final una sección **"## Dato
 - Nombre, tipo de app (variant) e **idioma de la UI** elegidos.
 - La tabla de boards/columnas con IDs reales (o el `TODO` si aún no los tiene).
 
-## 5. Instalá dependencias y VERIFICÁ que compila
+## 5. Instalá dependencias y VERIFICÁ que compila Y que dibuja
 1. Corré `npm install` en la carpeta del proyecto. Si falla, mostrá el error y sugerí el arreglo
    (normalmente: Node desactualizado o la execution policy de Windows).
 2. **Verificá con `npm run build`** (NO con `npm run dev`).
@@ -72,8 +74,21 @@ Además, en el `CLAUDE.md` del proyecto agregá al final una sección **"## Dato
    - Si falla el import de `@vibe/core/tokens` o de algún componente: la API de Vibe pudo haber
      cambiado de versión. Verificá los nombres reales (con el MCP opcional `@vibe/mcp` o la doc en
      vibe.monday.com) y ajustá `main.jsx`/`App.jsx`. **No dejes el proyecto sin verificar.**
-3. Completá `BOARDS` en `src/lib/monday.js` con los board IDs reales del paso 1.
-4. Creá `.env.local` copiando `.env.example`, con `VITE_MONDAY_MOCK=1` y `MONDAY_TOKEN=` **vacío**
+3. **Corré también `npm run verificar`.** ⚠️ **`build` en verde NO significa que la app funcione.**
+   Es JavaScript: una prop que no existe (el clásico `Box.paddings.MEDIUM`, que es API de Vibe 2)
+   compila perfecto y explota recién en runtime → React no monta nada → **pantalla en blanco**.
+   `npm run verificar` monta la app de verdad y falla si no dibuja.
+   - Si falla con "Cannot read properties of undefined": es una prop de Vibe inventada. En
+     `@vibe/core` 4 las props son **strings** (`padding="medium"`, `type="text2"`, `gap="medium"`).
+     Los valores válidos están en `node_modules/@vibe/{layout,typography}/dist/**/*.types.d.ts` —
+     esa es la única fuente de verdad de la versión instalada. **No adivines ni tires de memoria.**
+   - **Repetí este chequeo cada vez que toques la UI**, no solo al crear el proyecto.
+4. Completá `BOARDS` en `src/lib/monday.js` con los board IDs reales del paso 1, **y los mismos IDs
+   en `TABLEROS_PERMITIDOS` de `api/monday.js`**. Ese filtro es lo que impide que el proxy —que
+   queda público en internet— sirva de relay hacia el resto de la cuenta del cliente.
+   Si la app **escribe** en monday, sacá además el filtro de `mutation` del mismo archivo, y avisá
+   que entonces la URL de Vercel hay que protegerla sí o sí.
+5. Creá `.env.local` copiando `.env.example`, con `VITE_MONDAY_MOCK=1` y `MONDAY_TOKEN=` **vacío**
    (el token lo carga el usuario cuando quiera datos reales; nunca se lo pidas por chat).
 
 ## 6. Cerrá contando los próximos pasos (breve y claro)

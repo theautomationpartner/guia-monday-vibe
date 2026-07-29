@@ -1,0 +1,24 @@
+/* src/App.css — CSS global mínimo.
+ *
+ * Regla: los fondos, textos y bordes salen de los TOKENS de Vibe (esas variables cambian solas
+ * con el tema claro / oscuro / negro). Acá no va ni un hex.
+ *
+ * Sin este archivo, en modo oscuro queda un marco blanco alrededor de la app: los componentes
+ * de Vibe se adaptan, pero el <body> de la página no, porque no es de Vibe.
+ */
+
+body {
+  /* Los navegadores traen 8px de margen por defecto. Adentro de monday el espacio es escaso
+     y ese margen se nota. */
+  margin: 0;
+  background: var(--primary-background-color);
+  color: var(--primary-text-color);
+}
+
+/* Si necesitás un color de marca puntual (un acento, un ícono), definilo como variable y dale
+ * un valor distinto en oscuro: un color pensado para fondo blanco casi siempre queda apagado
+ * sobre fondo oscuro. Que sea la excepción, no la regla.
+ *
+ * :root                              { --app-accent: #6c5ce7; }
+ * .dark-app-theme, .black-app-theme  { --app-accent: #a29bfe; }
+ */

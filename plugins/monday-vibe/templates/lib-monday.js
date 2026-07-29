@@ -6,6 +6,7 @@
 //  3) NATIVO      → dentro de monday/vibe: monday.api() con la sesión (sin token estático)
 // Regla del CLAUDE.md: NUNCA llamar a monday-sdk-js ni fetch directo desde componentes; pasar por acá.
 
+import { useEffect } from "react";
 import mondaySdk from "monday-sdk-js";
 
 const monday = mondaySdk();
@@ -45,9 +46,36 @@ function mockApi(query) {
 }
 
 // ---- API pública ----
+/**
+ * Contexto de monday: qué ítem está abierto, quién mira, qué tema usa.
+ *
+ * ⚠️ Fuera de monday NO existe un context real: no hay ítem abierto ni usuario logueado. Eso hace
+ * imposible probar en local una item view (`ctx.itemId` viene vacío y la app "no anda"). Para
+ * poder probar igual, acá se puede simular por querystring:
+ *
+ *   ?itemId=123456789            → como si ese ítem estuviera abierto
+ *   ?theme=dark                  → para ver el tema oscuro (o `black`)
+ *   ?email=otro@empresa.com      → como si mirara otra persona
+ *
+ * Es SOLO una ayuda de desarrollo. Dentro de monday manda siempre el context de verdad, así que
+ * nadie puede usar esto para ver datos ajenos: los permisos los aplica monday del lado del
+ * servidor, no la app.
+ */
 export async function getContext() {
-  if (IS_MOCK || !INSIDE_MONDAY) return MOCK_CONTEXT; // fuera de monday no hay context real
-  return (await monday.get("context")).data;
+  if (INSIDE_MONDAY && !IS_MOCK) return (await monday.get("context")).data;
+
+  const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+  const simulado = {};
+  for (const clave of ["itemId", "boardId", "theme", "viewMode"]) {
+    const v = params?.get(clave);
+    if (v) simulado[clave] = v;
+  }
+  const email = params?.get("email");
+  return {
+    ...MOCK_CONTEXT,
+    ...simulado,
+    user: { ...MOCK_CONTEXT.user, ...(email ? { email } : {}) },
+  };
 }
 
 export async function api(query, variables = {}) {
@@ -81,5 +109,49 @@ export function onContextChange(cb) {
   return monday.listen("context", (res) => cb(res.data));
 }
 
+// ---- Tema de monday ----
+// 🔴 ESTO NO ES OPCIONAL. Los colores de Vibe son variables CSS definidas bajo las clases
+// `.light-app-theme`, `.dark-app-theme` y `.black-app-theme`. Si la app no pone ninguna, queda
+// SIEMPRE en claro — y adentro de monday en modo oscuro se ve como un bloque blanco en medio de
+// la pantalla. Es un bug que no se nota programando (nadie tiene el navegador en oscuro) y que
+// el cliente ve el primer día.
+const CLASES_DE_TEMA = {
+  light: "light-app-theme",
+  dark: "dark-app-theme",
+  black: "black-app-theme",
+};
+
+/** Aplica el tema al <body>. Lo llama useMondayTheme(); no hace falta usarlo a mano. */
+export function aplicarTema(theme) {
+  if (typeof document === "undefined") return;
+  const clase = CLASES_DE_TEMA[theme] || CLASES_DE_TEMA.light;
+  Object.values(CLASES_DE_TEMA).forEach((c) => document.body.classList.remove(c));
+  document.body.classList.add(clase);
+}
+
+/**
+ * Hook: hace que la app siga el tema de monday, y reaccione si el usuario lo cambia
+ * con la app abierta.
+ *
+ * Usalo UNA vez, en el componente raíz:
+ *   import { useMondayTheme } from "./lib/monday";
+ *   function App() { useMondayTheme(); ... }
+ *
+ * Y en tu CSS global poné el fondo y el texto de la página con los tokens, o en modo oscuro
+ * queda un marco blanco alrededor de la app:
+ *   body { margin: 0; background: var(--primary-background-color); color: var(--primary-text-color); }
+ */
+export function useMondayTheme() {
+  useEffect(() => {
+    let vivo = true;
+    getContext().then((ctx) => vivo && aplicarTema(ctx?.theme));
+    const dejarDeEscuchar = onContextChange((ctx) => vivo && aplicarTema(ctx?.theme));
+    return () => {
+      vivo = false;
+      if (typeof dejarDeEscuchar === "function") dejarDeEscuchar();
+    };
+  }, []);
+}
+
 export { IS_MOCK, INSIDE_MONDAY };
-export default { getContext, api, onContextChange, IS_MOCK, INSIDE_MONDAY };
+export default { getContext, api, onContextChange, aplicarTema, useMondayTheme, IS_MOCK, INSIDE_MONDAY };

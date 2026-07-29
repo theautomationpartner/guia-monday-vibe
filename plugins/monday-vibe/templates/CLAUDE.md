@@ -33,6 +33,35 @@ Usar EXACTAMENTE lo que monday vibe genera, para que la traducción sea directa:
 - ❌ Frameworks full-stack que vibe no usa (Next.js con SSR, Remix, etc.). Vite + React "a secas".
 - ❌ Estado global exótico. `useState`/`useReducer`/Context alcanzan para el 95% de las apps monday.
 
+### ⚠️ API de `@vibe/core` 4: las props son STRINGS, no constantes
+Este es **el error más fácil de cometer**: Vibe 2 (`monday-ui-react-core`) usaba constantes estáticas
+(`Box.paddings.MEDIUM`) y hay muchísimo código viejo así dando vueltas — incluso en la memoria de la
+IA. **En Vibe 4 no existen.** Se pasan strings en minúscula:
+
+| ❌ No existe (Vibe 2) | ✅ Vibe 4 |
+|---|---|
+| `Box.paddings.MEDIUM` | `padding="medium"` |
+| `Box.roundeds.MEDIUM` | `rounded="medium"` |
+| `Box.borders.DEFAULT` | `border` + `borderColor="uiBorderColor"` |
+| `Box.backgroundColors.SECONDARY_BACKGROUND_COLOR` | `backgroundColor="secondaryBackgroundColor"` |
+| `Flex.gaps.MEDIUM` · `Flex.directions.COLUMN` · `Flex.align.STRETCH` | `gap="medium"` · `direction="column"` · `align="stretch"` |
+| `Text.types.TEXT2` · `Text.weights.MEDIUM` · `Text.colors.SECONDARY` | `type="text2"` · `weight="medium"` · `color="secondary"` |
+| `Heading.types.H2` | `type="h2"` |
+
+**Por qué duele tanto:** `Box.paddings` es `undefined`, así que `.MEDIUM` tira un **TypeError en
+runtime** → React no monta nada → **pantalla en blanco**. Pero es JavaScript: **`npm run build`
+compila igual, sin una sola queja.** Compilar ≠ funcionar.
+
+**Fuente de verdad de la versión instalada** (no confiar en la memoria ni en blogs):
+`node_modules/@vibe/layout/dist/**/*.types.d.ts` y `node_modules/@vibe/typography/dist/**/*.types.d.ts`.
+Ahí están los valores exactos que acepta cada prop.
+
+Otras trampas de la misma familia:
+- **`Box` no tiene `onClick`** (`BoxProps` solo extiende `VibeComponentProps`). `Flex` sí → para algo
+  clickeable con fondo/padding, envolvé el `Box` en un `Flex` que lleve el `onClick`.
+- **`Skeleton` con medidas propias** necesita `type="rectangle" size="custom"` además de
+  `width`/`height`.
+
 Si algo NO se puede hacer con Vibe, pará y avisá antes de meter una dependencia nueva.
 
 **Excepción — visualización de datos:** Vibe NO cubre gráficos. Para dashboards con charts está
@@ -83,14 +112,60 @@ Si la app tiene que comportarse distinto según el espacio, leelo de ahí — no
 
 ### Tema: light / dark / black (¡son 3!)
 - `context.theme` puede ser **`light`, `dark` o `black`**.
+- 🔴 **Hay que APLICAR el tema, no alcanza con usar Vibe.** Los colores de Vibe son variables CSS
+  definidas bajo las clases `.light-app-theme`, `.dark-app-theme` y `.black-app-theme`. Si la app
+  no pone ninguna, **queda siempre en claro** — y adentro de monday en modo oscuro se ve como un
+  bloque blanco. Es un bug que no se nota programando y que el cliente ve el primer día.
+  👉 Llamá **`useMondayTheme()`** (ya viene en `src/lib/monday.js`) una vez en el componente raíz.
+- 🔴 **El `<body>` también.** Los componentes de Vibe se adaptan, pero la página no es de Vibe: sin
+  esto queda un marco blanco alrededor de la app.
+  ```css
+  body { margin: 0; background: var(--primary-background-color); color: var(--primary-text-color); }
+  ```
 - ✅ Usá los **tokens de Vibe** (`import "@vibe/core/tokens"`) y los componentes de `@vibe/core`:
   se adaptan al tema solos.
 - ❌ **No hardcodees hex** (`#ffffff`, `#323338`) para fondos y textos: en dark queda ilegible.
-  Si necesitás un color de marca puntual, que sea la excepción, no la regla.
+  Si necesitás un color de marca puntual, que sea la excepción, no la regla — y **dale un valor
+  distinto en oscuro**, porque un color pensado para fondo blanco casi siempre queda apagado.
 
 ### Densidad
 monday es una UI **densa**. Evitá paddings gigantes y tipografías enormes: la app tiene que sentirse
 parte de monday, no una landing page.
+
+### 🔴 Idioma: los comentarios en español, lo que ve el usuario NO
+El código se comenta en español, pero **todo string que puede llegar a los ojos del cliente va en
+el idioma de la app**. Es facilísimo colarse: escribís un mensaje de error mientras probás, está en
+el mismo idioma que los comentarios de al lado, "se ve natural"… y termina en producción.
+
+Ya pasó: un cliente angloparlante abrió la app y leyó *"Estás corriendo fuera de monday, agregá
+?itemId= a la URL"*.
+
+- Las **pistas para el desarrollador** van detrás de `import.meta.env.DEV`, así no entran al build:
+  ```js
+  const pista = import.meta.env?.DEV ? " (dev: add ?itemId=<id>)" : "";
+  ```
+- Lo mismo para los `console.log` con datos del cliente.
+
+### Estados: "vacío", "sin acceso" y "sin ítem" NO son errores
+Mostrar *"Something went wrong"* cuando el usuario no hizo nada mal lo asusta y hace que reporte un
+bug que no existe. Cada uno tiene su mensaje:
+
+| Situación | Qué decir |
+|---|---|
+| Cargando | Un skeleton o "Loading…" |
+| No hay datos todavía | "No comments yet" + qué tiene que pasar para que aparezcan |
+| Sin permiso | "This information is private" — **sin revelar conteos ni fechas** |
+| Sin ítem abierto | "Open this app from a monday item" |
+| Falla real | "Something went wrong" + reintentar |
+
+Y ojo con **distinguir "no hay datos" de "no tenés permiso"**: monday devuelve la lista de boards
+vacía en los dos casos (ver los gotchas). Chequealo explícitamente.
+
+### Los datos de ejemplo no llevan datos reales del cliente
+Los mocks se escriben una vez y quedan para siempre — en el repo, en el prompt de vibe, en las
+capturas del video. Si copiás comentarios, nombres de proyecto o mails reales, ahí se quedan.
+**Inventá el contenido**, y que ejercite la pantalla: un texto largo que haga varias líneas, uno
+corto, fechas de días distintos.
 
 ### Cómo testear el tamaño de verdad (paso obligatorio)
 Probar en Vercel a pantalla completa **no alcanza** — te da una falsa sensación de que está bien.
@@ -172,6 +247,15 @@ Cuando la data vive en monday, documentá el modelo como **boards + columnas** (
 
 **App:**
 - [ ] La UI usa Vibe (`@vibe/core`); solo se usó otra librería donde Vibe no tiene equivalente (charts).
+- [ ] **`npm run verificar` pasa** (la app dibuja de verdad, no solo compila).
+- [ ] No hay props de Vibe 2 (`Box.paddings.MEDIUM`, `Text.types.TEXT2`…): en Vibe 4 son strings.
+- [ ] La app llama a **`useMondayTheme()`** y el `<body>` usa los tokens (probado en `?theme=dark`).
+- [ ] **Ningún texto visible está en el idioma equivocado**, y las pistas de dev están detrás de
+      `import.meta.env.DEV`.
+- [ ] "Vacío", "sin acceso" y "sin ítem" tienen su propio mensaje: no dicen "algo salió mal".
+- [ ] Los datos de ejemplo son **inventados** (sin comentarios, nombres ni mails reales del cliente).
+- [ ] `api/monday.js` tiene **`TABLEROS_PERMITIDOS` cargado** y el filtro de `mutation` puesto (o
+      sacado a conciencia, si la app escribe).
 - [ ] `src/lib/monday.js` centraliza el acceso y cubre los 3 modos (mock / proxy / nativo).
 - [ ] Cada pantalla/componente tiene nombre de negocio claro.
 - [ ] Está definido el **tipo de app / variant** monday.
@@ -198,8 +282,32 @@ Errores que ya costaron créditos/tiempo. Aplicarlos de entrada evita que Vibe (
   en **`.jsx`/`.js` (no TypeScript)**.
 - **Columnas checkbox (boolean):** se escriben con `change_column_value` + JSON `{"checked":"true"}`. `change_simple_column_value` las **rechaza** con error explícito.
 - **Columnas file:** subir = mutation `add_file_to_column` por **multipart/form-data** contra `/v2/file` (no `/v2`). Vaciar = `update_assets_on_item(files: [])`. `change_simple_column_value` no sirve para files.
-- **Columnas board_relation (conectadas):** `text` viene **siempre `null`**. Hay que pedir `... on BoardRelationValue { display_value }`. Escribir = `change_column_value` con `{"item_ids":[<id>]}`.
+- **Columnas board_relation (conectadas):** `text` viene **siempre `null`**. Hay que pedir `... on BoardRelationValue { display_value }` (o `linked_item_ids` si querés filtrar por ítem). Escribir = `change_column_value` con `{"item_ids":[<id>]}`.
+  - **No se pueden CREAR por API** (`InvalidColumnTypeException`): hay que agregarlas a mano desde
+    la interfaz (*+ Add column → Connect boards*). Planificalo, porque bloquea el desarrollo.
+  - Dejala **de una sola vía** salvo que de verdad necesites navegar al revés: la doble vía agrega
+    una columna al board del cliente sin aportar nada.
+- **🔴 Si se borra un ítem, monday BORRA el vínculo de las columnas conectadas que lo apuntaban.**
+  Los registros relacionados quedan huérfanos: siguen existiendo, pero **nadie puede saber a qué
+  pertenecían**, y una app que filtra por ese vínculo no los encuentra nunca más. Ya pasó en
+  producción, con datos reales, a la hora de haberlos cargado.
+  👉 Si guardás historial o registros vinculados, sumá **una columna de texto con el nombre (y/o el
+  ID) del ítem de origen**, escrita por la misma automatización. El vínculo sirve para filtrar; el
+  texto es el que sobrevive.
+- **🔴 Un board al que no tenés acceso NO da error: devuelve `boards: []` con HTTP 200.** Pasa si el
+  token es de otra cuenta, o si el board es privado y el dueño del token no está suscripto. El
+  síntoma es un crash río abajo (`Cannot read properties of undefined`) o, peor, una pantalla vacía
+  que parece "no hay datos". **Siempre validá que el board vino** antes de usarlo, y avisá con un
+  mensaje que diga *qué* board y *por qué* puede faltar. Para diagnosticar rápido:
+  `{ me { name account { id name } } }` → te dice contra qué cuenta estás pegando en realidad.
 - **Columnas formula encadenadas:** vía API muchas veces vienen **vacías** aunque sus dependencias tengan valor. No confiar en ellas; recalcular en código a partir de los datos crudos.
+- **🔴 Columnas de fecha: `text` viene convertido al huso de quien consulta, `value` viene en UTC.**
+  Verificado en producción: para el mismo ítem, `value` = `{"date":"2026-07-27","time":"08:05:08"}`
+  (UTC) pero `text` = `"2026-07-27 05:05"` (Argentina) — **sin ningún indicador de zona**. Si usás
+  `text`, `new Date()` lo lee como hora local del navegador y **el desfasaje se aplica dos veces**.
+  Con la app en Argentina y el usuario en Israel eso son **6 horas de error**. Los campos
+  `... on DateValue { date time }` tienen el mismo problema que `text`.
+  👉 **Para fechas, siempre `value`**, y armá el ISO a mano: `` `${date}T${time || "00:00:00"}Z` ``.
 - **Prerequisito de datos:** los boards/columnas que la app lee tienen que **existir y estar conectados ANTES**. Si Vibe no encuentra un board (ej. un tarifario), cae a datos por defecto y enmascara el problema — parece que anda y no.
 - **Colores/labels de status y opciones de dropdown:** leerlos en vivo de `settings_str` de la columna, no hardcodear (así un cambio en monday no requiere tocar código).
 - **⚠️ `React.StrictMode` duplica los efectos en desarrollo.** Si escribís en monday desde un

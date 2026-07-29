@@ -26,6 +26,19 @@ jamás el valor.
 
 **4. Verificá ANTES de publicar, no después.** Una vez que algo se subió a GitHub, ya está afuera.
 
+**5. Todo comando que le pases al usuario tiene que ser copiar-y-pegar, sin pensar.** Esto ya falló
+en producción dos veces seguidas, con un dev con experiencia. Cada bloque que le des:
+
+- **Empieza con el `cd` a la ruta absoluta del proyecto.** Nunca asumas dónde está parado. El error
+  que aparece cuando no lo está (`Your codebase isn't linked to a project on Vercel`) apunta a otro
+  lado y hace perder tiempo.
+- **Marca qué es literal y qué es un hueco.** `MONDAY_TOKEN` es el nombre de una variable, se copia
+  tal cual; un usuario lo reemplazó por el token y lo mandó por la línea de comandos.
+- **Escribe lo que va a aparecer en pantalla y qué contestar en cada prompt.** "Te va a pedir el
+  valor" no alcanza.
+- **Ofrece la alternativa por interfaz web** cuando exista. No todo el mundo se lleva bien con una
+  CLI interactiva, y el resultado es el mismo.
+
 ---
 
 ## Paso 0 — Chequeo previo (BLOQUEANTE)
@@ -49,8 +62,21 @@ y escupe basura). Reportá archivo y línea, sin el valor.
 alcanza**. Ese token ya viajó en un bundle o en el historial → **hay que rotarlo en monday**
 (perfil → Developers → API token → regenerar). Decíselo explícitamente al usuario.
 
-### 0.4 ¿Existe el proxy?
+### 0.4 ¿Existe el proxy, y está acotado? (BLOQUEANTE)
 Confirmá que existe `api/monday.js`. Sin eso la app no puede leer monday desde Vercel.
+
+🔴 **Y confirmá que tenga sus filtros.** Ese endpoint queda público en internet y el token es
+personal: arrastra todos los permisos de su dueño, incluida la escritura. Sin filtros es un relay
+hacia la cuenta entera del cliente. Tienen que estar los tres (ver el template del kit):
+
+| Filtro | Sin él, cualquiera con la URL puede |
+|---|---|
+| Bloqueo de `mutation` | **borrar o modificar** datos del cliente |
+| Lista de campos raíz | listar usuarios, equipos y documentos de la empresa |
+| Lista de tableros + exigir `ids` | leer **cualquier** tablero de la cuenta |
+
+Si la app escribe en monday, el primero no va — pero entonces **la URL tiene que quedar protegida**,
+y decíselo explícitamente al usuario.
 
 ---
 
@@ -146,18 +172,100 @@ vercel git connect --yes
 Si alguno falla o pide algo interactivo, **pasáselo al usuario** o indicá hacerlo desde el dashboard
 (Project → Settings → Git).
 
+⚠️ **`vercel git connect` falla con repos privados de una organización si la cuenta es Hobby:**
+`The repository is private and owned by an organization, which is not supported on the Hobby plan (409)`.
+**No es un bloqueante:** `vercel --prod` despliega igual desde la carpeta local; lo único que se
+pierde es el deploy automático en cada push. Decíselo así al usuario, sin dramatizar, y ofrecé las
+salidas (pasar el repo a la cuenta personal, o plan Pro). Nunca sugieras hacer público un repo de
+cliente.
+
+⚠️ Vercel **modifica dos archivos del usuario** al vincular: le agrega `.vercel` al `.gitignore` y
+mete un `VERCEL_OIDC_TOKEN` en `.env.local`. Commiteá el `.gitignore` y **confirmá que el
+`MONDAY_TOKEN` del usuario sigue estando** (sin imprimir su valor: mostrá solo los nombres de las
+claves).
+
 ### 4.1 Cargar el token — ⛔ ESTE PASO LO HACE EL USUARIO
-Pedile que corra en SU terminal:
-```
+
+**Vos no ejecutes este comando ni le pidas el token por chat.**
+
+🔴 **Cómo dar la instrucción (esto ya falló en la vida real, dos veces seguidas):**
+
+**a) SIEMPRE incluí el `cd` con la ruta completa, en el mismo bloque.** El usuario puede estar
+parado en cualquier carpeta. Si no está en la del proyecto, Vercel tira
+`Your codebase isn't linked to a project on Vercel` — un error que no dice nada sobre la causa real.
+Nunca des un comando suelto asumiendo dónde está parado.
+
+**b) Aclará que `MONDAY_TOKEN` es el NOMBRE de la variable, no un hueco para rellenar.** Un usuario
+reemplazó `MONDAY_TOKEN` por el token entero y lo mandó **en la línea de comandos** — quedó en el
+historial de PowerShell en texto plano. Usá una imagen concreta: *"`MONDAY_TOKEN` es la etiqueta del
+cajón; el token va adentro, cuando pregunte `Value?`"*.
+
+**c) Escribí literalmente lo que va a aparecer en pantalla y qué contestar.** No alcanza con "te va
+a pedir el valor".
+
+Formato a usar:
+
+````
+Copiá y pegá estas DOS líneas juntas:
+
+cd "<RUTA ABSOLUTA DEL PROYECTO>"
 vercel env add MONDAY_TOKEN production
-```
-La CLI le va a pedir el token; lo pega ahí. **Vos no ejecutes este comando ni le pidas el token por
-chat.** Repetir para `preview` si quiere que las ramas también funcionen.
+
+Después te va a preguntar:
+
+  ? Store as sensitive? (y/N)   →  escribí  y  y Enter
+  ? Value?                      →  pegá el token acá y Enter
+                                   (no vas a ver lo que pegás, salen asteriscos: es normal)
+
+Y repetí lo mismo para preview:
+vercel env add MONDAY_TOKEN preview
+````
+
+**Alternativa sin terminal** (ofrecela siempre, para quien se traba): vercel.com → el proyecto →
+Settings → Environment Variables → Key `MONDAY_TOKEN`, Value el token, marcar Production y Preview.
+
+Si el token llegó a viajar en la línea de comandos, indicá limpiar el historial
+(`Remove-Item (Get-PSReadlineOption).HistorySavePath` en PowerShell) **y rotarlo en monday**.
 
 Recordale además que **`VITE_MONDAY_MOCK` no debe estar en 1 en Vercel** (si está, la app muestra
 datos de ejemplo).
 
 ---
+
+### 4.2 Si el usuario quiere hacer PÚBLICO el repo (para el deploy automático en Hobby)
+
+Es una salida legítima al límite del plan Hobby, pero **antes de abrirlo hay que limpiar**, y no
+alcanza con borrar archivos: **hacer público el repo publica también todo el historial de git.**
+
+⚠️ Primero explicale que el historial de versiones **ya funciona** con el repo privado. Suele haber
+confusión entre "guardar versiones en GitHub" (ya anda) y "que Vercel despliegue solo en cada push"
+(eso es lo que el plan Hobby bloquea). Son cosas distintas.
+
+Si aun así quiere abrirlo, hacé esto en orden:
+
+1. **Buscá y sacá los datos del cliente.** Mostrale la lista antes de tocar nada:
+   - Mails y nombres de personas → a variable de entorno (`VITE_...`)
+   - `PLAN.md`, `CLAUDE.md` y cualquier doc con datos del cliente → al `.gitignore` (se quedan en el
+     disco, salen del repo)
+   - Scripts de migración de una sola vez → al `.gitignore`
+   - **Datos de ejemplo con contenido real** (comentarios, nombres de proyecto) → reemplazar por
+     texto inventado
+   - Nombres de columna con nombre de persona (`"Yael's Comments"`) → a variable de entorno
+   - Los **IDs de board/columna** pueden quedarse: sin token no dan acceso a nada. Decíselo, y que
+     decida el usuario.
+2. **Reescribí el historial**, o todo lo anterior sigue visible en los commits viejos:
+   ```
+   git checkout --orphan limpio
+   git add -A
+   git commit -m "..."
+   git branch -D master && git branch -m master
+   git push --force origin master
+   ```
+   ⚠️ Avisale que **se pierden los commits anteriores**. De ahí en adelante el historial se acumula
+   normal. Y ojo: el branch nuevo pierde el tracking → el próximo push necesita `-u origin master`.
+3. **Volvé a barrer** sobre `git ls-files` para confirmar que no quedó nada.
+4. Recién ahí: `gh repo edit <owner>/<repo> --visibility public --accept-visibility-change-consequences`
+5. **Escribí un README**: el repo ahora lo ve cualquiera.
 
 ## Paso 5 — Desplegar
 
@@ -169,7 +277,29 @@ git status --porcelain      # tiene que estar vacío
 vercel --prod
 ```
 
+⛔ **No cortes un deploy a la mitad.** Si `vercel --prod` tarda, esperalo: matarlo deja un
+deployment zombi y **los siguientes quedan en `Blocked`**, un estado que la CLI no explica
+(`vercel ls` dice solo `UNKNOWN` y `vercel inspect --logs` viene vacío). Para salir: borralos con
+`vercel remove <url> --yes` y volvé a desplegar limpio.
+
+💡 Si el repo **sí** quedó conectado a GitHub, no uses `vercel --prod`: hacé `git push` y listo. Los
+deploys que vienen del conector no se traban, y además queda registrado qué commit se desplegó.
+
+📋 **El panel web dice más que la terminal.** Cuando algo raro pase con Vercel, mandá al usuario a
+la pestaña *Deployments*: los estados reales (`Blocked`, `Queued`, `Error`) y su motivo aparecen ahí
+y no en la CLI.
+
 ### 5.1 Proteger la URL (staging con datos reales de un cliente)
+
+⚠️ **Antes de sugerir apagar la protección**, confirmá que `api/monday.js` tenga sus filtros (ver el
+paso 0.4). Con los filtros puestos, el peor caso de una URL filtrada es que **lean** los datos que
+la app muestra. Sin filtros, el peor caso es que **borren** el monday del cliente.
+
+Y sé honesto con el usuario sobre el techo: en plan **Hobby** los links para compartir que saltean
+la protección **no existen**. Solo hay prendida (solo su equipo de Vercel) o apagada (cualquiera con
+la URL). Si no quiere ninguna de las dos, la alternativa es mostrarle la app al cliente por
+videollamada — y no pierde casi nada, porque **la privacidad por usuario igual no se puede probar
+fuera de monday**.
 El endpoint `/api/monday` queda accesible en internet. Recomendá **una** de estas:
 - **Deployment Protection** de Vercel (Settings → Deployment Protection) — la más simple y la
   recomendada.
