@@ -48,6 +48,37 @@ system) — para eso van los screenshots.
 (`res.data` vs `res`) y si **lanza** ante `errors`. Medido: sin eso, toda la lógica de reintentos
 de los servicios queda rota, porque monday resuelve OK aunque la respuesta traiga errores.
 
+### 🔴 CERO PROSA SOBRE APIs — pegá el JSON real, nunca lo describas de memoria
+
+**Esta es la regla más cara de todas y se aprendió del peor modo.** En un export real, el prompt
+tenía 445 líneas de código pegado textual y **falló en la ÚNICA línea escrita a mano**:
+
+```
+El itemId sale del contexto: monday.get("context") devuelve { itemId, theme, user: { email } }.
+```
+
+Es falso. Devuelve `{ data: { itemId, ... } }`. El código correcto —con su `.data`— estaba en el
+repo, a la vista, mientras se escribía esa línea de memoria. Vibe transcribió el error con total
+fidelidad y **la app no funcionó**: `itemId` siempre `undefined`, pantalla de "sin ítem" para
+siempre, sin un solo error en consola. Costó 3 hipótesis equivocadas, un build de diagnóstico y
+varias vueltas antes de encontrarlo.
+
+**La regla:** si el prompt tiene que explicar qué devuelve una llamada, va **el JSON de una
+respuesta real**, copiado de la API o de un `console.log`. Nunca una descripción, ni siquiera
+cuando estás seguro — **sobre todo cuando estás seguro**.
+
+```
+Lo que llega, tal cual, verificado en producción:
+
+  { "method": "listen", "type": "context",
+    "data": { "itemId": "3081412888", "user": { "email": "..." } } }
+
+O sea: `res.itemId` es undefined; el bueno es `res.data.itemId`.
+```
+
+Vale para: la forma del contexto, la forma de las respuestas GraphQL, los valores de un enum, el
+formato de una fecha. **Todo lo que sea "la API devuelve X" se verifica antes de escribirlo.**
+
 ### Al pegar código de una app más grande: acotá el alcance explícitamente
 Si el código trae features que NO van a esta app (otros flujos, tipos de más, funciones
 duplicadas), agregá arriba una sección **"DECISIONES YA TOMADAS"** que:
@@ -112,9 +143,44 @@ Incluí SIEMPRE, arriba de todo:
 - **Reemplazo completo de archivos** entre iteraciones, no "tweakeá esto".
 
 ### 0c. Screenshots = contrato visual
+
 Como la app ya se probó, capturá un screenshot de **cada pantalla funcionando** y adjuntalo con
 *"reproducí EXACTO el look de estas imágenes"*. Vibe copia la UX/UI/colores en vez de adivinar →
 mucha menos iteración visual. En el entregable indicá **qué screenshot va con qué prompt**.
+
+⚠️ **PEDILE LAS CAPTURAS AL USUARIO ANTES DE ESCRIBIR LOS PROMPTS**, no después. Si las dejás para
+el final, ya escribiste todo describiendo pantallas que podrías haber mostrado.
+
+**Tres reglas que ya costaron una vuelta cada una:**
+
+1. **Al menos una tiene que ser ANGOSTA** (ventana a la mitad de la pantalla). Adentro de monday la
+   app vive en un panel angosto; si vibe solo ve capturas a pantalla completa, copia proporciones
+   que después no entran. Es la captura más valiosa del set.
+2. **Se sacan AL FINAL, con la app terminada.** Cada vez que se toca la UI, las capturas viejas
+   caducan. Pasó: unas capturas mostraban un rótulo cambiado media hora antes, y **contradecían el
+   texto del prompt**. Cuando la imagen y el texto se pelean, no sabés cuál gana.
+3. **Antes de adjuntarlas, abrí cada una y verificá** que muestre el estado actual de la app. Es
+   más rápido que descubrirlo después de un build.
+
+### 0f. ⚠️ Vibe NO hereda el design system de monday: usa el suyo
+
+Medido en un export real: se le mandaron capturas de una app hecha con `@vibe/core` y vibe la
+reconstruyó con **su propio sistema**: `lucide-react` para los íconos, variables CSS propias en
+formato HSL (`--card`, `--border`, `--foreground`, `--muted-foreground`) y su propia tipografía.
+
+Copió **el aspecto** de las capturas, no la implementación. Y después escribió CSS mezclando las
+dos convenciones: reglas que apuntaban a `var(--primary-background-hover-color)` y a
+`var(--ui-border-color)` —tokens de monday que **en su proyecto no existen**—. Cuando una variable
+CSS no existe, **la declaración entera se descarta**: las tarjetas quedaron sin fondo y **sin borde**,
+como texto suelto. Costó un build entero arreglarlo.
+
+**Entonces, en el prompt:**
+- ❌ NO digas solo *"usá los tokens de Vibe"* y te quedes tranquilo: puede no tenerlos.
+- ✅ Decí: *"usá ÚNICAMENTE variables CSS que vos mismo definas en el proyecto. NO asumas que
+  existen los tokens de monday (`--primary-text-color`, `--ui-border-color`, etc.): si no existen,
+  las reglas se descartan en silencio y los fondos y bordes desaparecen."*
+- ✅ Para el tema, dale las clases **y** los colores concretos, no solo el nombre del token.
+- ✅ Y después del build, **mirá la pantalla**: los bordes que faltan es el síntoma típico.
 
 ### 0d. Técnicas y límites oficiales de monday
 - **Datos por planilla**: un CSV/XLSX de ejemplo → vibe arma la estructura (fila = ítem, columna = campo).
@@ -247,12 +313,17 @@ equivoca si le dejás lugar a inventar.
 ## 4. Asigná el modelo a cada prompt (la mayor palanca de ahorro)
 | Modelo | Costo | Para |
 |---|---|---|
-| **Gemini Flash** | 10–20 | scaffold, UI, dashboards, ajustes visuales, pulido |
-| **Claude Sonnet** | 30–50 | pantallas con lógica/estado |
+| **Gemini Flash** | 10–20 | GENERAR de cero: scaffold, dashboards, pantallas sin lógica |
+| **Claude Sonnet** | 30–50 | pantallas con lógica/estado, **y TODAS las correcciones** |
 | **Claude Opus** | 50–500 | 🚨 SOLO el prompt de lógica pesada aislada |
 
 ⚠️ **Opus es la trampa #1**: un dashboard en Opus cuesta 10–25× lo mismo en Flash. Anotá el modelo
 sugerido al lado de cada prompt.
+
+⚠️ **Y Flash NO sirve para corregir.** Parece la opción obvia para un cambio de una línea, pero
+medido: falló 3 veces seguidas en cambios triviales sobre código existente; las mismas correcciones
+con Sonnet pasaron todas a la primera. **Editar es más difícil que generar** — hay que ubicar el
+punto exacto, cambiar solo eso y devolver el resto intacto. Ver "El ciclo de corrección".
 
 ## 5. Entregar — UN ARCHIVO POR PROMPT (no un md con todo mezclado)
 
@@ -317,6 +388,115 @@ Regla: el dev tiene que poder sacar cada captura **sin preguntarte nada**.
 - ❌ **Creerle el "✅ listo"** → suele declarar éxito con features hardcodeadas o deshabilitadas.
 - ❌ **Todo en Opus** o iterar la UX dentro de vibe.
 - ❌ **Mencionar el proxy `/api/monday` o el token** → eso es solo de Vercel; en vibe la auth es nativa.
+- ❌ **Describir una API de memoria** en vez de pegar una respuesta real. El error más caro medido.
+- ❌ **Corregir con el modelo barato** → falla en cambios de una línea y hace perder vueltas.
+- ❌ **Escribir la corrección como diagnóstico** ("está mal porque…") en vez de como orden ("de X a Y").
+- ❌ **Razonar en vez de diagnosticar** cuando algo no anda. Un `JSON.stringify` en pantalla cuesta
+  menos que dos hipótesis equivocadas.
+- ❌ **Ofrecer un prompt cosmético "por las dudas"** después de decir que no vale la pena. O vale y
+  se manda, o no vale y no se escribe.
+- ❌ **Validar una item view en el preview de vibe** → ahí nunca hay contexto de ítem. Hay que publicar.
+
+## 🔴 EL CICLO DE CORRECCIÓN — acá se va la plata de verdad
+
+**Dato medido en un export real, con un prompt que había pasado 3 rondas de prueba ciega:**
+
+```
+ 33 créditos   el build inicial — la app completa, funcionando
+180 créditos   las 8 correcciones que vinieron después
+────
+213 total      el 85% se fue en corregir, no en construir
+```
+
+La buena noticia: **la lógica de datos salió perfecta a la primera y no se tocó ni una vez.**
+Paginación, husos horarios, permisos, orden. Todo lo caro de arreglar, bien.
+Los 180 se fueron en **envoltura**: un estado inicial, unas clases de CSS, un `.data` faltante,
+y —lo peor— **57 créditos en borrar UNA línea de CSS cosmética**.
+
+Estas reglas salen de ahí. Se aplican DESPUÉS del primer build.
+
+### 1. Construir y corregir son dos modos distintos
+
+| | Para CONSTRUIR | Para CORREGIR |
+|---|---|---|
+| **Largo** | Lo más detallado posible | Lo más corto posible |
+| **Estilo** | Explicativo: el porqué evita que "mejore" la lógica | **Imperativo: de qué a qué. Sin diagnóstico** |
+| **Modelo** | Sonnet | **Sonnet también** (ver punto 2) |
+
+Medido: un prompt de corrección escrito como informe —*"el estado inicial tiene X, y el `if` corta
+antes de que Y resuelva, resultado Z"*— **falló**. Vibe respondió *"probá dividirlo en pasos más
+chicos"*. El mismo cambio, escrito así, salió a la primera:
+
+```
+CAMBIO 1 — App.jsx, estado inicial del useState
+De:   noItem: true,
+A:    noItem: false,
+```
+
+Para corregir, vibe no necesita entender por qué está mal. Necesita saber **qué reemplazar por qué**.
+
+### 2. El modelo barato sirve para generar, NO para editar
+
+⚠️ **Esto corrige lo que dice la tabla de modelos más abajo.** Medido:
+
+```
+Build inicial     · Claude Sonnet · ✅
+Corrección 1      · Gemini flash  · ❌ "I ran into a problem"
+Corrección 2      · Gemini flash  · ❌ falló
+Corrección 3 (1 línea) · Gemini flash · ❌ falló
+Las mismas, con Sonnet · ✅ todas de una
+```
+
+**Editar es más difícil que generar:** hay que ubicar exactamente dónde tocar, cambiar solo eso, no
+romper las otras 300 líneas y devolver todo consistente. Usá **Sonnet para las correcciones**, aunque
+sean de una línea. Flash solo para generar de cero.
+
+### 3. Ante un síntoma raro: DIAGNOSTICAR, no razonar
+
+Un build de diagnóstico cuesta ~25 créditos y **da la respuesta**. Tres hipótesis razonadas costaron
+más tiempo y dieron tres respuestas falsas seguidas (*"es el preview"*, *"es porque no está
+publicada"*, *"debe ser un board view"* — las tres equivocadas).
+
+El diagnóstico es siempre el mismo: **mostrar en pantalla el dato crudo.**
+
+```
+Cambio temporal de diagnóstico. En la pantalla de <el estado que falla>, agregá debajo el
+contenido completo de <el objeto sospechoso>, en letra chica y monoespaciada:
+
+  <pre style={{ fontSize: 11, whiteSpace: 'pre-wrap' }}>
+    {JSON.stringify(elObjeto, null, 2)}
+  </pre>
+
+Es temporal, se saca después.
+```
+
+**Regla:** si te encontrás con la segunda hipótesis sin haber medido, pará y mandá el diagnóstico.
+
+### 4. Lo cosmético se RECHAZA, no se ofrece "por las dudas"
+
+**57 créditos —el 27% del total— se fueron en borrar `max-width: 300px` de una regla CSS.** Tres
+intentos. Y lo peor: quien lo pidió había dicho explícitamente *"yo no lo mandaría, es cosmético y
+la información está duplicada justo arriba"*… y acto seguido pasó el prompt igual.
+
+**Decir "yo no lo haría, pero acá tenés el prompt" es no decidir.** Si no vale el crédito, no va el
+prompt. Cerrá con: *"esto es cosmético y no lo vamos a corregir; si el cliente lo pide, lo vemos"*.
+
+### 5. En vibe NO hay salida manual
+
+La pestaña **Code** es de **solo lectura**. Si la IA no puede hacer un cambio, **no podés meter mano
+vos**. No hay plan B.
+
+Eso cambia el cálculo de riesgo: desarrollar local no es solo más barato, es **el único lugar donde
+tenés el control**. Cuanto más terminada llegue la app al export, menos dependés de acertar.
+
+### 6. El preview de vibe NO sirve para validar una item view
+
+**No le pasa el contexto del ítem a la app.** El tablero que muestra es inventado por vibe (nombres
+tipo *"My board"*, gente que no existe en la cuenta). Una item view ahí adentro va a mostrar
+**siempre** el estado de "sin ítem", esté bien o mal programada.
+
+👉 Para validar una item view hay que **publicar** (publicar no gasta créditos) y abrirla desde un
+ítem real. Sin saber esto, se gastan builds "arreglando" algo que no está roto.
 
 ## Verificar cada build (no confiar en el "✅")
 Después de CADA prompt: abrí la app real y probá esa pantalla. Para features con datos, confirmá que
@@ -326,6 +506,29 @@ lea del **board real**, no de datos por defecto. Si falta algo, corregí con un 
 **Truco oficial de monday:** en modo **Discuss** (barato, no ejecuta código) **pedile a vibe que te
 explique qué construyó**. Es la forma más rápida de detectar que "dijo que sí" pero dejó algo
 hardcodeado o sin conectar — sin gastar un build para descubrirlo.
+
+## ⛔ NO SE ENTREGA UN EXPORT SIN VALIDAR — es una condición, no una sugerencia
+
+**El dev que reciba este paquete va a hacer el export UNA sola vez y tiene que funcionar.** No va a
+saber qué revisar ni por qué. La validación es tu trabajo, no el suyo.
+
+Un export está terminado cuando:
+
+- [ ] La **prueba ciega** (paso 4, abajo) devuelve **cero bloqueantes** y **ninguna ambigüedad que
+      cambie datos**. Se repite con un agente NUEVO después de cada corrección, hasta que quede
+      limpio. Suelen hacer falta 2 o 3 vueltas.
+- [ ] Cada afirmación del prompt sobre **qué devuelve una API** está copiada de una respuesta real,
+      no escrita de memoria.
+- [ ] Las **capturas están al día** con la versión final de la app.
+
+Si no se cumplen las tres, el paquete no se entrega: se corrige y se vuelve a validar.
+
+> **Por qué es tan tajante:** en una medición real la checklist manual encontró 12 huecos y la
+> prueba ciega encontró **59** sobre el mismo material. Y las tres rondas de prueba ciega
+> encontraron, además, **7 bugs reales en la app original** — entre ellos uno que estaba perdiendo
+> 9 de 209 entradas en producción, en silencio.
+>
+> La prueba ciega no valida el prompt. **Valida la app.**
 
 ## Antes de entregar: AUTO-VERIFICACIÓN obligatoria
 

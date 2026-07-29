@@ -287,6 +287,22 @@ Errores que ya costaron créditos/tiempo. Aplicarlos de entrada evita que Vibe (
     la interfaz (*+ Add column → Connect boards*). Planificalo, porque bloquea el desarrollo.
   - Dejala **de una sola vía** salvo que de verdad necesites navegar al revés: la doble vía agrega
     una columna al board del cliente sin aportar nada.
+- **Automatizaciones que crean ítems en otro board** (el patrón para capturar cambios de columna).
+  Verificado configurándolas en producción:
+  - El valor NUEVO de la columna es el token **`Current value`**. Al lado está `Previous value`, que
+    es el anterior: confundirlos guarda siempre el comentario viejo y se nota semanas después.
+  - **El vínculo NO se configura en el formulario del ítem.** Sale de una ventana aparte,
+    *"Choose where to add a connection"*, donde hay que elegir **Target board** (el board donde se
+    crea el ítem) y su columna conectada. El desplegable del formulario que lleva el nombre del
+    board de origen es otra cosa y conviene **dejarlo vacío**.
+  - **Al DUPLICAR una automatización hay que cambiar TRES cosas, no dos:** el disparador, el texto
+    que identifica la columna, y **la condición** (`only if <columna> is not empty`). Olvidarse de
+    la condición hace que la automatización nueva dependa de que OTRA columna tenga contenido — y
+    no da ningún error, simplemente no guarda nada.
+  - Poné siempre la condición **"solo si el valor nuevo no está vacío"**: si no, cada vez que se
+    borra el contenido de la columna se crea un registro en blanco.
+  - `Now` en una columna de fecha **guarda en UTC** (verificado: 0 minutos de diferencia contra
+    `created_at`). Se puede usar sin miedo.
 - **🔴 Si se borra un ítem, monday BORRA el vínculo de las columnas conectadas que lo apuntaban.**
   Los registros relacionados quedan huérfanos: siguen existiendo, pero **nadie puede saber a qué
   pertenecían**, y una app que filtra por ese vínculo no los encuentra nunca más. Ya pasó en

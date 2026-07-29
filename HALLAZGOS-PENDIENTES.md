@@ -341,3 +341,136 @@ gotcha de que monday devuelve `boards: []` sin acceso. Y el cartel cambia según
   se acumula). Hay que buscar un ítem con la columna vacía, o crear uno de prueba.
 - **Un `git checkout --orphan` pierde el tracking del branch**: el próximo push necesita
   `-u origin master`.
+
+---
+
+# JORNADA 2 — construir la app en monday vibe de punta a punta
+
+La app se construyó y publicó. **213 créditos en total: 33 el build inicial, 180 las correcciones.**
+La lógica de datos salió perfecta a la primera y nunca se tocó; los 180 se fueron en envoltura.
+
+Todo esto ya está parcheado en `/exportar` (v0.4.0). Queda para revisar si alcanza.
+
+---
+
+## 10. 🔴 El error más caro: describir una API de memoria
+
+El prompt tenía **445 líneas de código pegado textual** y falló en la **única línea escrita a mano**:
+
+    "monday.get('context') devuelve { itemId, theme, user: { email } }"
+
+Es falso: devuelve `{ data: { itemId, ... } }`. El código correcto, con su `.data`, estaba en el
+repo mientras se escribía esa línea. Vibe lo transcribió con fidelidad total y **la app no
+funcionó** — `itemId` siempre undefined, sin un solo error visible.
+
+Costó 3 hipótesis equivocadas, un build de diagnóstico y varias vueltas.
+
+**Parche:** regla dura "CERO PROSA SOBRE APIs" en `/exportar`. Si hay que explicar qué devuelve una
+llamada, va el JSON de una respuesta real.
+
+**A revisar:**
+- [ ] ¿Debería `/exportar` **negarse** a generar el prompt si detecta frases tipo "devuelve {" sin
+      un bloque JSON al lado?
+
+---
+
+## 11. Construir y corregir son dos modos distintos
+
+Un prompt de corrección escrito como informe (*"el estado inicial tiene X, y el if corta antes…"*)
+**falló dos veces**. El mismo cambio escrito como orden (`De: noItem: true / A: noItem: false`)
+salió a la primera.
+
+Y el modelo importa al revés de lo que decía el kit: **Flash falló 3 veces seguidas en cambios de
+una línea**; las mismas correcciones con Sonnet pasaron todas. **Editar es más difícil que generar.**
+
+**Parche:** sección "El ciclo de corrección" + corregida la tabla de modelos.
+
+---
+
+## 12. 57 créditos (27% del total) en borrar una línea de CSS cosmética
+
+Tres intentos para sacar un `max-width: 300px`. Y lo peor: se había dicho explícitamente *"yo no lo
+mandaría, es cosmético"*… y se pasó el prompt igual.
+
+**Decir "yo no lo haría, pero acá tenés el prompt" es no decidir.**
+
+**Parche:** regla — lo cosmético se rechaza, no se ofrece "por las dudas".
+
+---
+
+## 13. Diagnosticar cuesta menos que razonar
+
+Ante el síntoma, se plantearon tres hipótesis (*el preview*, *falta publicar*, *debe ser board
+view*). **Las tres falsas.** Un build de diagnóstico —mostrar el JSON crudo en pantalla— dio la
+respuesta exacta.
+
+**Parche:** regla + el prompt de diagnóstico listo para copiar.
+
+**A revisar:**
+- [ ] Que sea el PRIMER paso ante cualquier síntoma, no el último.
+
+---
+
+## 14. Vibe no hereda el design system de monday
+
+Se le mandaron capturas de una app hecha con `@vibe/core` y reconstruyó con **su propio sistema**:
+`lucide-react`, variables HSL propias, otra tipografía. Copió el aspecto, no la implementación.
+
+Después escribió CSS apuntando a tokens de monday que en su proyecto **no existen**. Cuando una
+variable CSS no existe la declaración se descarta entera: **las tarjetas quedaron sin fondo y sin
+borde**. Un build para arreglarlo.
+
+**Parche:** sección 0f — no alcanza con decir "usá los tokens de Vibe".
+
+---
+
+## 15. El preview de vibe no sirve para validar una item view
+
+No pasa el contexto del ítem: el tablero que muestra es inventado. Una item view ahí adentro
+muestra **siempre** "sin ítem", esté bien o mal. Hay que publicar (publicar no gasta créditos).
+
+---
+
+## 16. En vibe no hay salida manual
+
+La pestaña **Code** es de **solo lectura**. Si la IA no puede hacer un cambio, no lo podés hacer
+vos. Cambia el cálculo de riesgo: desarrollar local no es solo más barato, es el único lugar
+donde tenés el control.
+
+---
+
+## 17. Las capturas caducan, y hay que pedirlas antes
+
+Unas capturas mostraban un rótulo cambiado media hora antes y **contradecían el texto del prompt**.
+Y se pidieron después de escribir todo, cuando tendrían que haber sido lo primero.
+
+Además: **al menos una tiene que ser angosta.** Es la más valiosa del set y la que nadie saca.
+
+---
+
+## 18. Automatizaciones de monday: lo aprendido configurándolas
+
+- `Current value` vs `Previous value`: confundirlos guarda siempre el comentario viejo.
+- El vínculo NO sale del formulario: es una ventana aparte (*Choose where to add a connection* →
+  **Target board**).
+- **Al duplicar hay que cambiar TRES cosas**, no dos: disparador, texto identificador Y **la
+  condición**. Olvidar la condición hace que la automatización dependa de otra columna, sin error.
+- `Now` en una columna de fecha guarda en UTC (verificado: 0 minutos de diferencia).
+
+**Parche:** todo en los gotchas de `templates/CLAUDE.md`.
+
+---
+
+## 19. Lo que SÍ funcionó, y hay que proteger
+
+**La lógica de datos salió perfecta en el primer build y sobrevivió 8 correcciones sin tocarse.**
+Paginación con cursor, husos horarios, `boards` vacío como falta de permiso, desempate del orden,
+nombre de respaldo.
+
+Eso es mérito directo de:
+1. Las **3 rondas de prueba ciega** antes de exportar.
+2. Los **7 bugs reales** que esas rondas encontraron **en la app original** — incluido uno que
+   perdía 9 de 209 entradas en producción, en silencio.
+
+**La prueba ciega no valida el prompt: valida la app.** Es la parte más barata del proceso y la
+que más plata salva. Ahora es una condición de entrega, no una sugerencia.
