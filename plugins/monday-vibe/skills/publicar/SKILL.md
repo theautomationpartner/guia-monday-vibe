@@ -40,6 +40,21 @@ y el token quedó en el historial de PowerShell en texto plano.
 `MONDAY_TOKEN`, `production`, `preview` **se escriben tal cual**. Lo único que cambia es la ruta.
 Si dudás de si hace falta aclararlo: hace falta.
 
+**Y si hay MÁS DE UNA variable que cargar, poné una tabla `variable → qué va en Value`.**
+Medido en la misma sesión: después de cargar el token, al llegar a la segunda variable el usuario
+preguntó *"en Value de esta, ¿va el token de monday?"*. Arrastró la respuesta de la primera. Dos
+`vercel env add` seguidos se leen como el mismo trámite.
+
+```
+| Variable            | Qué va en Value                      |
+|---------------------|--------------------------------------|
+| MONDAY_TOKEN        | el token largo de monday (eyJhbGci…) |
+| VITE_SOLO_LECTURA   | 1                                    |
+```
+
+Y decí explícitamente **en cuál va el secreto y en cuáles no**: *"el token va en un solo lugar,
+en ningún otro"*.
+
 **5. Todo comando que le pases al usuario tiene que ser copiar-y-pegar, sin pensar.** Esto ya falló
 en producción dos veces seguidas, con un dev con experiencia. Cada bloque que le des:
 
