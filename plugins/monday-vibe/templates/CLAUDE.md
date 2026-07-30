@@ -282,6 +282,15 @@ Errores que ya costaron créditos/tiempo. Aplicarlos de entrada evita que Vibe (
   en **`.jsx`/`.js` (no TypeScript)**.
 - **Columnas checkbox (boolean):** se escriben con `change_column_value` + JSON `{"checked":"true"}`. `change_simple_column_value` las **rechaza** con error explícito.
 - **Columnas file:** subir = mutation `add_file_to_column` por **multipart/form-data** contra `/v2/file` (no `/v2`). Vaciar = `update_assets_on_item(files: [])`. `change_simple_column_value` no sirve para files.
+- **🔴 `items(ids: [...])` devuelve SOLO 25 por defecto**, aunque le pases 200 ids. No da error, no
+  avisa: simplemente faltan. Verificado contra producción — 47 ids pedidos, 25 devueltos:
+  ```graphql
+  items(ids:[...47 ids...])            # ❌ devuelve 25
+  items(ids:[...47 ids...], limit:100) # ✅ devuelve 47
+  ```
+  Es el mismo bug silencioso que el `limit` de `items_page`, pero peor, porque acá **el límite es
+  invisible**: nadie escribe `limit:25`, viene solo. **Poné `limit` SIEMPRE en `items(ids:)`**, y si
+  pueden ser más de 100, batcheá de a 100.
 - **`column_values` SIEMPRE devuelve un array**, aunque pidas una sola columna por id. Costó una app
   entera cargando vacía:
   ```js
