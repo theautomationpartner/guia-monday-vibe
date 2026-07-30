@@ -359,9 +359,19 @@ Errores que ya costaron créditos/tiempo. Aplicarlos de entrada evita que Vibe (
     dos es el bueno, con su column_id, antes de codear.
   - **No la setees dentro de `create_item`**: no se aplica de forma confiable. Creá el ítem primero
     y seteá la conexión en una segunda llamada.
-- **Columnas mirror / lookup:** son de **solo lectura** y el formato de su `text` no es confiable.
-  Nunca las uses para lógica: leé el dato del ítem original. (Una app usó el mirror de un Timeline
-  para calcular fechas y las barras quedaron corridas.)
+- **🔴 Columnas mirror / lookup: `text` viene VACÍO aunque la columna muestre datos en pantalla.**
+  Hay que pedirlas como `... on MirrorValue { display_value }`. Si consultás `text` y ves vacío,
+  **no concluyas que la columna está vacía** — es el error que hace que descartes una fuente de
+  datos entera. Pasó: se dio por vacía una columna que tenía datos en 13 de 21 ítems, y sobre esa
+  conclusión falsa se armó medio requerimiento.
+  ```graphql
+  ac: column_values(ids:["mirror_x"]) { text }                              # ❌ null
+  ac: column_values(ids:["mirror_x"]) { ... on MirrorValue { display_value } }  # ✅
+  ```
+  Aun así son de **solo lectura** y su `display_value` es **un string armado para el ojo**: un
+  mirror sobre varios ítems devuelve algo como `"2026-06-01 - 2026-06-14, 2026-06-28 - ..."`,
+  todo pegado con comas. **No lo parsees.** Andá al dato original por la columna de conexión y
+  calculá vos (el mínimo, el máximo, la suma). El mirror sirve para mirar, no para calcular.
 - **Automatizaciones que crean ítems en otro board** (el patrón para capturar cambios de columna).
   Verificado configurándolas en producción:
   - El valor NUEVO de la columna es el token **`Current value`**. Al lado está `Previous value`, que
