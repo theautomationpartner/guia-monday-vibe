@@ -57,6 +57,11 @@ compila igual, sin una sola queja.** Compilar ≠ funcionar.
 Ahí están los valores exactos que acepta cada prop.
 
 Otras trampas de la misma familia:
+- **🔴 Ojo: esto vale para TU app local, no para lo que genera vibe.** Vibe **no usa `@vibe/core`**:
+  arma su propio design system con componentes tipo shadcn (`@components/ui/*`), Tailwind y
+  `lucide-react`. O sea que un texto cortado en una app de vibe **no** viene del default de
+  `Text`, sino de una clase `truncate` explícita sobre una columna de ancho fijo. Diagnosticá
+  sobre el código que corresponde, no sobre el que tenés en la cabeza.
 - **🔴 `Text` y `Heading` CORTAN A UNA SOLA LÍNEA por defecto.** En el código de Vibe 4 los valores
   por defecto son `ellipsis = true, maxLines = 1`. O sea: **todo párrafo que escribas se va a ver
   cortado con "…"** salvo que lo apagues a mano:

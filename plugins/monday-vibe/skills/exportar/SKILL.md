@@ -95,6 +95,35 @@ O sea: item.p.linked_item_ids es undefined; el bueno es item.p[0].linked_item_id
 
 👉 **Pegar la consulta no alcanza. Hay que pegar también una respuesta real de esa consulta.**
 
+### 🔴 El contexto del ítem: vibe tiene SU PROPIO proveedor
+
+Leyendo el código que vibe generó para una item view apareció esto:
+
+```jsx
+import { useMondayContext } from '../context/MondayContextProvider';
+...
+const { context } = useMondayContext();
+// y después: context.itemId, context.boardId
+```
+
+**Vibe arma un `MondayContextProvider` propio y lo expone con `useMondayContext()`.** No usa
+`monday.get("context")` ni `monday.listen("context", …)`.
+
+Eso explica el error más caro que medimos: el prompt decía *"el itemId sale de
+`monday.get("context")`"* y vibe quedó peleando entre su propio proveedor y una llamada suelta,
+con el `.data` de por medio. **No es que la doc estuviera mal escrita: le estábamos pidiendo que
+no usara su propia infraestructura.**
+
+**La regla:** en una **item view**, el prompt NO explica cómo obtener el contexto. Dice:
+
+```
+El ítem actual sale del contexto que ya provee la app (useMondayContext / el provider
+que armes): itemId y boardId. No agregues otra forma de leer el contexto.
+```
+
+Y si igual querés documentar la forma cruda del SDK (para el modo local), **pegá el JSON real**
+con su `.data`, y aclará que es solo para correr fuera de monday.
+
 ### ⚠️ Lo que decís en un prompt NO se hereda al siguiente
 Ese mismo equipo había escrito una sección **"COMMON PITFALLS"** al pie del prompt de su primera
 app, con `window.mondaySdk.api()` como trampa nº 1. Esa app **no cometió el error**.
