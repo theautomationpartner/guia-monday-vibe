@@ -26,6 +26,20 @@ jamás el valor.
 
 **4. Verificá ANTES de publicar, no después.** Una vez que algo se subió a GitHub, ya está afuera.
 
+**5. Todo comando que le pases al usuario va con el formato completo de 4.1. NO lo resumas.**
+Tres cosas, siempre, aunque te parezca obvio:
+- el `cd` con la **ruta absoluta**, en el mismo bloque;
+- qué partes se escriben **literal** y cuáles se reemplazan;
+- **la pantalla que va a ver** y qué contestar en cada pregunta.
+
+⚠️ Esto ya falló **tres veces**, y la tercera fue con la regla escrita en esta misma skill: se
+entregó `vercel env add MONDAY_TOKEN production` sin explicar nada, y el usuario preguntó si tenía
+que reemplazar `MONDAY_TOKEN` por el token. Las dos veces anteriores no preguntó: **lo reemplazó**,
+y el token quedó en el historial de PowerShell en texto plano.
+
+`MONDAY_TOKEN`, `production`, `preview` **se escriben tal cual**. Lo único que cambia es la ruta.
+Si dudás de si hace falta aclararlo: hace falta.
+
 **5. Todo comando que le pases al usuario tiene que ser copiar-y-pegar, sin pensar.** Esto ya falló
 en producción dos veces seguidas, con un dev con experiencia. Cada bloque que le des:
 
