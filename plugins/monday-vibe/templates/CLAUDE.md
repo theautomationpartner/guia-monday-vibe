@@ -57,10 +57,31 @@ compila igual, sin una sola queja.** Compilar ≠ funcionar.
 Ahí están los valores exactos que acepta cada prop.
 
 Otras trampas de la misma familia:
+- **🔴 `Text` y `Heading` CORTAN A UNA SOLA LÍNEA por defecto.** En el código de Vibe 4 los valores
+  por defecto son `ellipsis = true, maxLines = 1`. O sea: **todo párrafo que escribas se va a ver
+  cortado con "…"** salvo que lo apagues a mano:
+  ```jsx
+  <Text type="text2">Un párrafo largo…</Text>                   // ❌ se corta a 1 línea
+  <Text type="text2" ellipsis={false}>Un párrafo largo…</Text>   // ✅ envuelve
+  ```
+  Es de los defectos que más "reporta" el cliente (*"no se lee todo, está cortado"*) y que más
+  fácil se te pasa, porque en tu monitor ancho el texto entra justo. **Regla: `ellipsis={false}`
+  en todo lo que sea una frase; dejalo prendido solo donde querés una línea sola** (un nombre en
+  una celda angosta, donde además te da tooltip gratis al desbordar).
+- **🔴 `Avatar` espera un COLOR DE CONTENIDO, no un nombre de estado.** `backgroundColor` toma los
+  40 colores de monday (`"done-green"`, `"working_orange"`, `"purple"`, `"bright-blue"`… su default
+  es `"chili-blue"`). Si le pasás `"primary"`, `"positive"` o `"neutral"` **no da error**: arma una
+  clase CSS que no existe, el fondo queda transparente y **las iniciales blancas desaparecen sobre
+  el fondo blanco**. La lista real está en
+  `node_modules/@vibe/core/dist/**/utils/colors-vars-map.js`.
+- **Para accesibilidad es `aria-label`, NO `ariaLabel`.** Verificado en `Avatar`, `Slider` e
+  `IconButton`: la prop está declarada como `"aria-label"`. `ariaLabel` se cuela hasta el DOM y
+  React te llena la consola de warnings.
 - **`Box` no tiene `onClick`** (`BoxProps` solo extiende `VibeComponentProps`). `Flex` sí → para algo
   clickeable con fondo/padding, envolvé el `Box` en un `Flex` que lleve el `onClick`.
 - **`Skeleton` con medidas propias** necesita `type="rectangle" size="custom"` además de
-  `width`/`height`.
+  `width`/`height`. Y **acompañalo siempre con un texto** ("Loading…"): un esqueleto solo no le
+  dice nada a un lector de pantalla.
 
 Si algo NO se puede hacer con Vibe, pará y avisá antes de meter una dependencia nueva.
 
