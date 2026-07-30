@@ -82,6 +82,19 @@ Otras trampas de la misma familia:
 - **Para accesibilidad es `aria-label`, NO `ariaLabel`.** Verificado en `Avatar`, `Slider` e
   `IconButton`: la prop está declarada como `"aria-label"`. `ariaLabel` se cuela hasta el DOM y
   React te llena la consola de warnings.
+- **🔴 Vibe NO trae escala de espaciado.** `--spacing-xs`, `--spacing-small`, `--spacing-medium`,
+  `--spacing-large` **no existen**. Y una variable CSS inexistente **no falla**: el navegador
+  **descarta la declaración entera**, sin una palabra en la consola.
+  ```css
+  padding: var(--spacing-small);   /* ❌ la variable no existe → NO HAY padding */
+  ```
+  No es "padding cero por error": es que no hay padding. La app se ve apretada, fea y vieja, y
+  no hay nada que debuggear. **Definí tu propia escala en un `:root`** y corré
+  `npm run verificar-css`, que compara las variables que usás contra las que quedaron definidas
+  en el build.
+  ⚠️ Este bug apareció **dos veces en el mismo proyecto**: primero en el CSS que generó vibe
+  (tarjetas sin fondo ni borde) y después en el nuestro. Es de los que más se disfrazan de
+  "problema de diseño".
 - **`Box` no tiene `onClick`** (`BoxProps` solo extiende `VibeComponentProps`). `Flex` sí → para algo
   clickeable con fondo/padding, envolvé el `Box` en un `Flex` que lleve el `onClick`.
 - **`Skeleton` con medidas propias** necesita `type="rectangle" size="custom"` además de

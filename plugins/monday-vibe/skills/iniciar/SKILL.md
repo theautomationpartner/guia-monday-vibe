@@ -62,6 +62,7 @@ Copiá los archivos de `${CLAUDE_PLUGIN_ROOT}/templates/` a la carpeta del proye
 | `verificar-render.mjs` | `verificar-render.mjs` | `npm run verificar` — que la app DIBUJE, no solo que compile |
 | `probar-logica.mjs` | `probar-logica.mjs` | `npm run probar` — que los NÚMEROS estén bien |
 | `probar-proxy.mjs` | `probar-proxy.mjs` | `npm run probar-proxy` — que el proxy no tenga agujeros |
+| `verificar-css.mjs` | `verificar-css.mjs` | `npm run verificar-css` — caza variables CSS inexistentes |
 | `probar-escritura.mjs` | `probar-escritura.mjs` | Solo si la app escribe. Prueba real con limpieza garantizada |
 | `env.example` | `.env.example` | Y copialo también como `.env.local` |
 
