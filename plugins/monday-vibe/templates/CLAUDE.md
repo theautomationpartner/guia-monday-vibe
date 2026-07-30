@@ -159,6 +159,18 @@ monday es una UI **densa**. Evitá paddings gigantes y tipografías enormes: la 
 parte de monday, no una landing page.
 
 ### 🔴 Idioma: los comentarios en español, lo que ve el usuario NO
+
+**Y "lo que ve el usuario" incluye lo que ESCRIBÍS EN SUS TABLEROS.** No es solo la interfaz:
+los nombres de ítems que crea la app, los datos de prueba, las columnas que agregues. Todo eso
+vive en monday, lo ve su gente, aparece en sus notificaciones y queda en el historial de
+actividad. **Que algo sea "de prueba" no lo hace invisible.**
+
+Ya pasó: se creó un escenario de prueba en la cuenta de un cliente angloparlante con ítems
+llamados *"proyecto con nombre largo"*, *"sin fechas"* y *"Persona A"*. Los vio antes que el
+propio dev.
+
+Regla corta: **si el texto termina adentro de monday, va en el idioma del cliente.** El español
+queda solamente para los comentarios del código y lo que se imprime en tu terminal.
 El código se comenta en español, pero **todo string que puede llegar a los ojos del cliente va en
 el idioma de la app**. Es facilísimo colarse: escribís un mensaje de error mientras probás, está en
 el mismo idioma que los comentarios de al lado, "se ve natural"… y termina en producción.
