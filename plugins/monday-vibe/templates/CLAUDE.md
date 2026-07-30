@@ -384,6 +384,62 @@ Errores que ya costaron créditos/tiempo. Aplicarlos de entrada evita que Vibe (
   **nunca lo vuelvas a crear**. Ojo: si ese id vive solo en el estado de React, un F5 lo pierde y se
   duplica el registro. Para cosas contables, verificá contra monday antes de crear.
 
+## 🔴 Si la app ESCRIBE en monday: el permiso NO es tuyo
+
+Leer los datos del cliente es una cosa. **Crear, editar y borrar en sus tableros es otra**, y no
+alcanza con que el proyecto lo pida: hay que pedirlo, explicando exactamente qué se toca.
+
+### Antes de la primera escritura
+
+1. **Escribí un documento de impacto** (una carilla) y mandalo. Tiene que decir:
+   - qué tableros **modifica** y con qué operaciones;
+   - qué tableros **solo lee**;
+   - qué **NO** toca (columnas, otros tableros, usuarios, automatizaciones);
+   - **qué se ve afectado en consecuencia** — los mirrors, las fórmulas y los dashboards que
+     se alimentan de lo que vas a escribir. Esto se averigua leyendo el `settings_str` de las
+     columnas, no suponiendo.
+2. **Preguntá por las automatizaciones.** No se ven por API. Que el cliente abra el tablero y
+   mire si hay alguna que salte al crear o borrar un ítem.
+3. **Pedí un ítem descartable para probar**, no uno real. Y avisá que se borra al terminar.
+
+### Los dos candados
+
+No alcanza con "me acuerdo de no apretar Guardar". Van los dos, y **cerrados por defecto**:
+
+| Dónde | Variable | Qué frena |
+|---|---|---|
+| Navegador | `VITE_SOLO_LECTURA=1` | El botón de guardar queda deshabilitado y la app avisa que está en modo revisión |
+| **Servidor** (`api/monday.js`) | `APP_PERMITE_ESCRITURA` sin poner | Rechaza toda mutación **aunque le peguen al proxy directo** |
+
+El que vale es el segundo: el del navegador no protege de nadie que conozca la URL.
+Habilitar la escritura tiene que ser un cambio explícito y visible, nunca un descuido.
+
+### La prueba de escritura se hace con limpieza garantizada
+
+Ver `probar-escritura.mjs`. La estructura no se negocia:
+
+```
+armar el escenario  →  probar  →  limpiar en un `finally`  →  verificar que no quedó nada
+```
+
+- **El orden de borrado importa:** primero las filas vinculadas, después el ítem. Al revés,
+  monday corta los vínculos y las filas quedan huérfanas para siempre.
+- Los ítems de prueba llevan un nombre **imposible de confundir** (`TEST - BORRAR`).
+- Al final, el script **vuelve a consultar** y falla si sobró algo.
+
+### Después: dejá constancia de lo que tocaste
+
+`activity_logs` del tablero te dice **qué se creó y borró, cuándo y con qué usuario**:
+
+```graphql
+query { boards(ids:[BOARD]) { activity_logs(limit:100) { event created_at user_id data } } }
+```
+
+Sirve para dos cosas, y las dos importan: demostrar que tu prueba no tocó nada real, y
+descubrir que **otra persona estaba editando el tablero al mismo tiempo** (pasa más de lo que
+parece: los datos del cliente son un blanco móvil).
+
+
 ## Cómo trabajar conmigo (Claude Code) en este repo
 - **Planificar features grandes:** subagente `monday-vibe:vibe-planner` (no ensucia el contexto principal).
 - **Planificar primero:** en apps medianas/complejas, `/monday-vibe:planear`.

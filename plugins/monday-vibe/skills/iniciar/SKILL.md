@@ -59,6 +59,10 @@ Copiá los archivos de `${CLAUDE_PLUGIN_ROOT}/templates/` a la carpeta del proye
 | `api-monday.js` | `api/monday.js` | Proxy serverless (acá vive el token) |
 | `verificar-render.mjs` | `verificar-render.mjs` | Chequea que la app **dibuje**, no solo que compile |
 | `gitignore.txt` | `.gitignore` | **Crítico**: evita subir el token |
+| `verificar-render.mjs` | `verificar-render.mjs` | `npm run verificar` — que la app DIBUJE, no solo que compile |
+| `probar-logica.mjs` | `probar-logica.mjs` | `npm run probar` — que los NÚMEROS estén bien |
+| `probar-proxy.mjs` | `probar-proxy.mjs` | `npm run probar-proxy` — que el proxy no tenga agujeros |
+| `probar-escritura.mjs` | `probar-escritura.mjs` | Solo si la app escribe. Prueba real con limpieza garantizada |
 | `env.example` | `.env.example` | Y copialo también como `.env.local` |
 
 Además, en el `CLAUDE.md` del proyecto agregá al final una sección **"## Datos de esta app"** con:
