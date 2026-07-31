@@ -403,12 +403,21 @@ Creá esta estructura en la raíz del proyecto:
 
 ```
 vibe/
-├── LEEME.md              ← para el HUMANO: orden, modelos, capturas, verificación
+├── LEEME.txt             ← para el HUMANO: orden, modelos, capturas, verificación
 ├── 1-datos-y-esqueleto.txt   ← para VIBE: copiar TODO y pegar
 ├── 2-pantallas.txt           ← para VIBE
 ├── 3-calculos.txt            ← para VIBE (si hay lógica pesada)
 └── 4-pulido.txt              ← para VIBE
 ```
+
+🔴 **TODO lo que entregás va en `.txt`, incluido el LEEME. Nada de `.md`.**
+Medido con un usuario real: los `.md` se abren en un visor, las tablas se ven distinto de como
+las escribiste, y **los links de markdown no se pueden abrir** desde donde el usuario lee.
+Un `.txt` se abre con doble clic en cualquier lado.
+
+🔴 **Y cuando le digas dónde está un archivo, dale la RUTA ABSOLUTA COMPLETA en texto plano**,
+no un link ni una ruta relativa. Ver la sección "Cómo entregarle las cosas al usuario" del
+CLAUDE.md.
 
 **Reglas de los archivos `.txt`:**
 - Contienen **SOLO** el prompt. Nada de encabezados markdown, tablas de créditos, ni comentarios
@@ -416,7 +425,7 @@ vibe/
 - Empiezan con el header de instrucción dura (Sección 0b).
 - Se copian **completos** (Ctrl+A, Ctrl+C).
 
-**El `LEEME.md`** es lo único para el humano. Tiene que decir, por cada archivo:
+**El `LEEME.txt`** es lo único para el humano. Tiene que decir, por cada archivo:
 | Archivo | Modelo a elegir en vibe | Qué adjuntar |
 |---|---|---|
 | `1-datos-y-esqueleto.txt` | Gemini Flash | — |

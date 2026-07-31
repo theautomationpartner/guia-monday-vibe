@@ -487,6 +487,31 @@ descubrir que **otra persona estaba editando el tablero al mismo tiempo** (pasa 
 parece: los datos del cliente son un blanco móvil).
 
 
+## 🔴 Cómo entregarle las cosas al usuario
+
+Dos reglas que salieron de trabajar con un usuario real, y las dos son sobre lo mismo: que pueda
+**abrir** lo que le das.
+
+**1. Lo que el usuario tiene que leer, abrir o mandar va en `.txt`, no en `.md`.**
+El markdown se abre en un visor, las tablas se ven distinto de como las escribiste, y en algunos
+editores hay que elegir "abrir con". Un `.txt` se abre con doble clic en cualquier lado y se ve
+igual siempre. El `.md` queda para lo que lee la IA — este archivo, por ejemplo.
+
+**2. Cuando nombres un archivo, dale la RUTA ABSOLUTA COMPLETA, en texto plano.**
+Ni links de markdown, ni rutas relativas. Textual del usuario:
+
+> *"los link directo a abrir los archivos me los das hardcodeado así y no los encuentro"*
+
+```
+❌   Está en [REQUERIMIENTOS.md](accounting/REQUERIMIENTOS.md)
+❌   Está en ./accounting/REQUERIMIENTOS.md
+✅   Está en:
+     C:\Users\...\proyecto\accounting\REQUERIMIENTOS.txt
+```
+
+Un link que no abre es **peor** que no dar nada: el usuario pierde tiempo buscándolo y encima
+termina creyendo que el archivo no existe. La ruta completa la pega en el explorador y listo.
+
 ## Cómo trabajar conmigo (Claude Code) en este repo
 - **Planificar features grandes:** subagente `monday-vibe:vibe-planner` (no ensucia el contexto principal).
 - **Planificar primero:** en apps medianas/complejas, `/monday-vibe:planear`.
