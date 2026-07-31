@@ -12,7 +12,12 @@
 //    · las filas de Assignments que genere la app para ese proyecto
 //
 // La limpieza va en un `finally` y borra en el orden correcto (primero las filas, después el
-// proyecto, después la persona). Si se borra el proyecto antes que sus filas, monday corta los
+// proyecto, después la persona).
+//
+// 🔴 Y OJO: si la cuenta tiene automatizaciones, crear un ítem puede crear TABLEROS enteros.
+// Pasó: cada proyecto de prueba genero su propio tablero de tareas, y la limpieza —que solo
+// miraba ítems— dejó 5 tableros huérfanos en la cuenta del cliente. La verificación final
+// tiene que listar **tableros** además de ítems. Si se borra el proyecto antes que sus filas, monday corta los
 // vínculos y las filas quedan huérfanas: existen pero nadie sabe a qué pertenecían.
 //
 // Ningún proyecto ni persona real se toca en ningún momento.

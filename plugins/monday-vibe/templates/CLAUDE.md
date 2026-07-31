@@ -388,6 +388,18 @@ Errores que ya costaron créditos/tiempo. Aplicarlos de entrada evita que Vibe (
     borra el contenido de la columna se crea un registro en blanco.
   - `Now` en una columna de fecha **guarda en UTC** (verificado: 0 minutos de diferencia contra
     `created_at`). Se puede usar sin miedo.
+- **🔴 Crear un ítem puede crear COSAS QUE NO PEDISTE.** En una cuenta con automatizaciones,
+  crear un ítem en un board puede disparar la creación de **otros ítems e incluso de TABLEROS
+  enteros**. Verificado: cada proyecto de prueba que se creó en un Portfolio generó
+  automáticamente su propio tablero de tareas. El script de limpieza borró los ítems… y dejó
+  **5 tableros huérfanos** en la cuenta del cliente.
+  👉 Después de limpiar una prueba, **no alcanza con verificar los ítems**: listá también los
+  **tableros** y buscá tu prefijo. Y antes de crear nada, preguntá al cliente **qué
+  automatizaciones tiene el board donde vas a escribir** (por API no se ven).
+- **⚠️ Para identificar datos de prueba, el nombre NO alcanza.** Buscar "test" en el nombre
+  pesca tareas reales: *"Phase 3 - building new test station"*, *"C PM Calibration"*. Lo
+  confiable es **de qué tablero cuelgan** o un **prefijo propio inconfundible** que hayas puesto
+  vos (`TEST-QA - …`), anclado al principio (`/^TEST-QA/`, no `includes("test")`).
 - **🔴 Si se borra un ítem, monday BORRA el vínculo de las columnas conectadas que lo apuntaban.**
   Los registros relacionados quedan huérfanos: siguen existiendo, pero **nadie puede saber a qué
   pertenecían**, y una app que filtra por ese vínculo no los encuentra nunca más. Ya pasó en
